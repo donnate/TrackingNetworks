@@ -1,0 +1,15 @@
+install.packages('glmnet', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('gplots', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages("infotheo", dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('RSQLite', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('MASS', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('Kendall', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('XML', dependencies=TRUE, repos='http://cran.rstudio.com/')
+install.packages('PBSmodelling', dependencies=TRUE, repos='http://cran.rstudio.com/')
+options(useHTTPS=FALSE)
+install.packages("BiocInstaller", repos="http://bioconductor.org/packages/3.3/bioc")
+source("https://bioconductor.org/biocLite.R")
+biocLite(c('minet','impute', 'preprocessCore', 'GO.db', 'AnnotationDbi'))
+install.packages('nettools', dependencies=TRUE, repos='http://cran.rstudio.com/')
+
+install.packages('minet'dependencies=TRUE, repos='http://cran.rstudio.com/'),, ‘impute’, ‘preprocessCore’, ‘GO.db’, ‘AnnotationDbi
