@@ -1,7 +1,6 @@
 list.of.packages <- c("glmnet", "sna", "ergm", "fpc", "ggplot2", "Rcpp","glmnet","gplots","igraph","LCA","Matrix","nettools",
                       "PBSmodelling","tsne","tictoc","plotly")
 
-#devtools::install_github('IRkernel/IRkernel')
 
 installed=installed.packages()
 list.of.packages_bioclite=c("minerva","minet","dtw","WGCNA","impute","sincell")
