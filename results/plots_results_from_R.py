@@ -9,22 +9,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
-#name='_Island_3'
-#name='_SBM_85'
-#name='change_pnt_rdm_85'
-#name='change_pnt_Power_85_2'
-#name='change_pnt_Island'
-#name='change_pnt_DotProduct_85'
 name='change_pnt_SBM_85'
-#info='N=85,p=0.2, and prop=0.25'
-#info='Island graph (3 connected islands on 9 nodes)'
-#info='Island graph (3 connected islands on 9 nodes), change point at T=6 and T=13'
-#info='Dot Product graph (K=6), change point at T=6 and T=13'
 info='SBM graph, change point at T=6 and T=13'
-#info='SBM graph'
-#info='ER graph, change point at T=9'
-#info='Power graph, change point at T=6 and T=13'
-#dist=pd.DataFrame.from_csv('/Users/cdonnat/Dropbox/Distances/results/dist'+name+'.csv')
 dist=pd.DataFrame.from_csv('/Users/cdonnat/Dropbox/Distances/results/'+name+'.csv')
 dist=dist.T
 dist.index=range(dist.shape[0])

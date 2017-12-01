@@ -1,7 +1,9 @@
-source("~/Dropbox/Distances/distances/spanning_trees.R")
-source("~/Dropbox/Distances/distances/distances.R")
-source("~/Dropbox/Distances/tests_synthetic_data/test_functions.R")
-source("~/Dropbox/Distances/tests_synthetic_data/test_ADMM.R")
+path2dir='/Users/cdonnat/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+setwd(path2dir)
+
+source("./distances/spanning_trees.R")
+source("./distances/distances.R")
+source("./tests_synthetic_data/test_functions.R")
 library(nettools)
 
 
@@ -15,68 +17,53 @@ compare_graphs<-function(graph_seq,distance_type="poly",args=list(order_max=3,al
   }
   print(s)
   distances<-matrix(0, s[1], s[1])
-  if (distance_type %in% c("poly","HIM","ST")){
-      for (i in 1:(s[1]-1)){
-        print(paste("Progress:", i/s[1]*100))
-        if (distance_type=="poly"){
-          if (length(s)>2){
-            distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-              return(poly_distance(graph_seq[i,,],graph_seq[j,,],order_max=args$order_max,alpha=args$alpha))
-            })
-          }
-          else{
-            distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-              return(poly_distance(graph_seq[[i]],graph_seq[[j]],order_max=args$order_max,alpha=args$alpha))
-            })
-          }
-
-        }
-        else{
-          if (distance_type=="ST"){
-            if (length(s)>2){
-              distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-              return(ST_distance(graph_seq[i,,],graph_seq[j,,]))
-            })
-            }
-            else{
-              distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-                return(ST_distance(graph_seq[[i]],graph_seq[[j]]))
-              })
-            }
-          }
-          else{
-            if (length(s)>2){
-              distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-                dist=netdist(graph_seq[i,,],graph_seq[j,,],d="HIM")
-                return(dist[3])
-              })
-            }
-            else{
-              distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
-                dist=netdist(graph_seq[[i]],graph_seq[[j]],d="HIM")
-                return(dist[3])
-              })
-            }
-          }
-        }
-        
-      }
-  }
-  else{
-      if (distance_type=="Lasso"){
-          a=nrow(graph_seq[[1]])
-          graph_seq_flatten=matrix(0,length(retained),a^2)
-          it=0
-          for (ii in 1:length(retained)){
-              it=it+1
-              graph_seq_flatten[it,]<-as.vector(as.matrix(graph_seq[[it]]))
-          }
-          distances<-get_Similarity(graph_seq_flatten)
+  
+  for (i in 1:(s[1]-1)){
+    print(paste("Progress:", i/s[1]*100))
+    if (distance_type=="poly"){
+      if (length(s)>2){
+        distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+          return(poly_distance(graph_seq[i,,],graph_seq[j,,],order_max=args$order_max,alpha=args$alpha))
+        })
       }
       else{
-          print("distances not found")
+        distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+          return(poly_distance(graph_seq[[i]],graph_seq[[j]],order_max=args$order_max,alpha=args$alpha))
+        })
       }
+
+    }
+    else{
+      if (distance_type=="ST"){
+        if (length(s)>2){
+          distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+          return(ST_distance(graph_seq[i,,],graph_seq[j,,]))
+        })
+        }
+        else{
+          distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+            return(ST_distance(graph_seq[[i]],graph_seq[[j]]))
+          })
+        }
+      }
+      else{
+        if (length(s)>2){
+          distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+            dist=netdist(graph_seq[i,,],graph_seq[j,,],d="HIM")
+            return(dist[3])
+          })
+        }
+        else{
+          distances[i,(i+1):s[1]]<-sapply((i+1):s[1], FUN=function(j){
+            dist=netdist(graph_seq[[i]],graph_seq[[j]],d="HIM")
+            return(dist[3])
+          })
+        }
+      }
+    }
+    
   }
+
   return(distances+t(distances))
 }
 
