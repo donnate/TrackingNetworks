@@ -1,4 +1,4 @@
-##### Tool functions
+##### Tool functions (just a few utility functions)
 
 delta<-function(x,t) ifelse(x==t,1,0)
 delta_c<-function(x,t) ifelse(x!=t,1,0)
@@ -15,4 +15,17 @@ row_normalize<-function(A){
     B[j,]<-A[j,]/normA[j]  
   }
   return(B)
+}
+
+
+ginv<-function(X, tol = sqrt(.Machine$double.eps))
+{
+    ## Generalized Inverse of a Matrix
+    dnx <- dimnames(X)
+    if(is.null(dnx)) dnx <- vector("list", 2)
+    s <- svd(X)
+    nz <- s$d > tol * s$d[1]
+    structure(
+    if(any(nz)) s$v[, nz] %*% (t(s$u[, nz])/s$d[nz]) else X,
+    dimnames = dnx[2:1])
 }
