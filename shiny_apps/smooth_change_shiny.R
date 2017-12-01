@@ -1,5 +1,6 @@
 library(shiny)
-source("~/Dropbox/Distances/tests_synthetic_data/main_tests.R")
+path2dir='~/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+setwd(path2dir)
 smooth_changes_shiny<- function() {
   
   shinyApp(

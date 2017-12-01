@@ -1,11 +1,4 @@
-##### Clean testing procedure for the distances between graphs
-
-#library(gplots)
 library(nettools)
-#source("~/Dropbox/Food_network/spanning_trees/spanning_trees.R")
-#source("~/Dropbox/Food_network/spanning_trees/distances.R")
-####Susan changed this....
-#source("~/Dropbox/Food_network/code/tools.R")
 
 generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
   ## no self edges in that model

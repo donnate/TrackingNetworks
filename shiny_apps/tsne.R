@@ -1,8 +1,9 @@
 library(shiny)
 library(igraph)
-source("~/Dropbox/Distances/tests_synthetic_data/main_tests.R")
+path2dir='~/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+setwd(path2dir)
+source("./tests_synthetic_data/main_tests.R")
 subjects=c(10003,10004,10005,10006,10008,10014,10017,10018,10020 ,10022,10023,10028,10031,10032,10034,10036,10039,10040,10043,10045,10046,10047,10101,19005,19007)
-#load(file="~/Dropbox/Food_network/code/notes_extended/PNAS_graph_data/data_post_PNASvis_pb.RData")
 
 library(tsne)
 library(plotly)

@@ -1,5 +1,4 @@
 #### Implementation of a few distances
-source("~/Dropbox/Distances/tools.R")
 require('MASS')
 library(sna)
 

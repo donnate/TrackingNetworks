@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Aug 23 13:09:37 2017
-
+For plotting the different figures in the paper
 @author: cdonnat
 """
 import numpy as np
@@ -9,14 +9,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+import os
+
+current_dir=os.getcwd()
+
 name='change_pnt_SBM_85'
 info='SBM graph, change point at T=6 and T=13'
-dist=pd.DataFrame.from_csv('/Users/cdonnat/Dropbox/Distances/results/'+name+'.csv')
+dist=pd.DataFrame.from_csv(current_dir+'/results/'+name+'.csv')
 dist=dist.T
 dist.index=range(dist.shape[0])
+
+
+
+
+###### Correlations between distances
 C=dist.corr('kendall')
 sns.heatmap(C)
-plt.savefig('/Users/cdonnat/Dropbox/Distances/write_up/plot/eigenT40_N'+name+'_correlation.pdf', bbox_inches='tight')
+plt.savefig(current_dir+'/plots/'+name+'_correlation.pdf', bbox_inches='tight')
 
 plt.figure()
 cmap=plt.get_cmap('gnuplot')
@@ -36,7 +45,7 @@ plt.xlabel('Time')
 plt.ylabel('Distance')
 plt.title('Distances for  small consecutive random changes,\n'+info)
 plt.legend(loc='center left',bbox_to_anchor=(1,0.5))
-plt.savefig('/Users/cdonnat/Dropbox/Distances/write_up/plot/eigenT40_N'+name+'_first_plots.pdf', bbox_inches='tight')
+plt.savefig(current_dir+'/plots/'+name+'_first_plots.pdf', bbox_inches='tight')
 
 colors2=['red','blue','yellow','black','orange','purple','violet','green','lightblue','forrestgreen','cyan','gold','chocolate','indianred','mediumseagreen','magenta','grey','royalblue']
 plt.figure()
@@ -48,7 +57,7 @@ plt.xlabel('Time')
 plt.ylabel('Distance')
 plt.title('Distances for  small consecutive random changes,\n'+info)
 plt.legend(loc='center left',bbox_to_anchor=(1,0.5))
-plt.savefig('/Users/cdonnat/Dropbox/Distances/write_up/plot/eigenT40_N'+name+'_plots_poly.pdf', bbox_inches='tight')
+plt.savefig(current_dir+'/plots/'+name+'_plots_poly.pdf', bbox_inches='tight')
 
 
 plt.figure()
@@ -61,7 +70,7 @@ plt.xlabel('Time')
 plt.ylabel('Distance')
 plt.title('Distances for  small consecutive random changes,\n'+info)
 plt.legend(loc='center left',bbox_to_anchor=(1,0.5))
-plt.savefig('/Users/cdonnat/Dropbox/Distances/write_up/plot/eigenT40_N'+name+'_plots_eigen_func.pdf', bbox_inches='tight')
+plt.savefig(current_dir+'/plots/'+name+'_plots_eigen_func.pdf', bbox_inches='tight')
 
 
 

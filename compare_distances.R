@@ -1,4 +1,4 @@
-path2dir='/Users/cdonnat/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+path2dir='~/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
 setwd(path2dir)
 
 source("./distances/spanning_trees.R")

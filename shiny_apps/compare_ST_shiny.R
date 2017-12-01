@@ -1,5 +1,7 @@
 library(shiny)
-source("~/Dropbox/Distances/tests_synthetic_data/main_tests.R")
+path2dir='~/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+setwd(path2dir)
+source('./tests_synthetic_data/main_tests.R")
 compare_spanning_trees_shiny<- function(seq_graphs) {
   
   shinyApp(

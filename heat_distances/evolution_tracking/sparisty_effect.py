@@ -9,6 +9,8 @@ ext='spar_'
 import numpy as np
 import networkx as nx
 import sys
+import os
+current_dit=os.
 sys.path.append( '/Users/cdonnat/Dropbox/Distances/heat_distances/')
 from shapes.shapes import *
 from heat_diffusion import *
@@ -205,22 +207,3 @@ for t in taus:
     plt.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
     plt.savefig(path2figs+type_g+'sharpe_'+str(b)+'.pdf', bbox_inches='tight')
 
-#figname='spar_plot_var_'+str(tau)+'.pdf'
-#fig, ax = plt.subplots()
-#sb.set(style='ticks')
-#sb.set_context("paper", font_scale=1.5)
-#sb.set_style('white')
-##distances[tau],distances_chi[tau],coeff[tau],chi_agg[tau]=track_evolution(NetSeq,diffusion_type="heat",tau=tau)
-#plt.plot([[distances[tau][b] for b in B])
-#plt.title('Evolution of the AUC Distances between consecutive \n graphs for different sparsity levels s')
-#plt.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
-#plt.xlabel('Time t')
-#plt.ylabel(r'Distance between graphs $G_t$ and $G_{t+1}$')
-#plt.tight_layout()
-#ax.spines['left'].set_position('zero')
-#ax.spines['right'].set_color('none')
-#ax.spines['bottom'].set_position('zero')
-#ax.spines['top'].set_color('none')
-#ax.xaxis.set_ticks_position('bottom')
-#ax.yaxis.set_ticks_position('left')
-#plt.savefig(path2figs+figname, bbox_inches='tight') 

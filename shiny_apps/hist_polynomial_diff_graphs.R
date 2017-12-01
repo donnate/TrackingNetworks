@@ -1,5 +1,7 @@
 library(shiny)
-source("~/Dropbox/Distances/tests_synthetic_data/main_tests.R")
+path2dir='~/Dropbox/TrackingNetworkChanges/'    ##### Needs to be changed accordingly
+setwd(path2dir)
+source("./tests_synthetic_data/main_tests.R")
 graph_name=c("ER","PA","Islands","Dot-Product","SBM")
 
 hist_polynomials_different_graphs<- function() {
