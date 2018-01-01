@@ -1,10 +1,9 @@
-######## In this module ar e
+######## 
 
-dir="/Users/cdonnat/Dropbox/TrackingNetworkChanges"
-setwd(dir)
-source("./tests_synthetic_data/test_functions.R")
-source("./spanning_trees.R")
-source("./distances.R")
+
+source("./tests_synthetic_data/dynamics.R")
+source("./distances/spanning_trees.R")
+source("./distances/distances.R")
 
 ########### Default parameters for random graph generation  #####################
 N=30
@@ -220,15 +219,16 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
   ##### 1> Generate initial random matrix
   args<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
-  if (hasArg(p) )args$p=p
-  if (hasArg(power) )args$power=power
-  if (hasArg(islands.n)) args$islands.n=islands.n
-  if (hasArg(islands.size) )args$islands.size=islands.size
-  if (hasArg(islands.pin)) args$islands.pin=islands.pin
-  if (hasArg(n.inter)) args$n.inter=n.inter
-  if (hasArg(K)) args$K=K
-  if (hasArg(block.sizes)) args$block.sizes=block.sizes
-  if (hasArg(pm)) args$pm=pm
+  input_list <- as.list(substitute(list(...)))
+  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(pow) ){args_l$power<-input_list$pow}
+  if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
+  if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
+  if (hasArg(islands.pin)) args_l$islands.pin=input_list$islands.pin
+  if (hasArg(n.inter)) args_l$n.inter=input_list$n.inter
+  if (hasArg(K)) args_l$K=input_list$K
+  if (hasArg(block.sizes)) args_l$block.sizes=input_list$block.sizes
+  if (hasArg(pm)) args_l$pm=input_list$pm
   
   Ag<-generate_realistic_adjacency(N,opts=opts, args=args, verbose=TRUE)
   A<-as(get.adjacency(Ag),"matrix")
@@ -505,15 +505,18 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
   ##### 1> Generate initial random matrix
   args<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
-  if (hasArg(p) )args$p=p
-  if (hasArg(power) )args$power=power
-  if (hasArg(islands.n)) args$islands.n=islands.n
-  if (hasArg(islands.size) )args$islands.size=islands.size
-  if (hasArg(islands.pin)) args$islands.pin=islands.pin
-  if (hasArg(n.inter)) args$n.inter=n.inter
-  if (hasArg(K)) args$K=K
-  if (hasArg(block.sizes)) args$block.sizes=block.sizes
-  if (hasArg(pm)) args$pm=pm
+  input_list <- as.list(substitute(list(...)))
+  #print(do.call("pow",$pow))
+  ### Change argument list according to what is given as argument to the function
+  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(pow) ){args_l$power<-input_list$pow}
+  if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
+  if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
+  if (hasArg(islands.pin)) args_l$islands.pin=input_list$islands.pin
+  if (hasArg(n.inter)) args_l$n.inter=input_list$n.inter
+  if (hasArg(K)) args_l$K=input_list$K
+  if (hasArg(block.sizes)) args_l$block.sizes=input_list$block.sizes
+  if (hasArg(pm)) args_l$pm=input_list$pm
   Ag<-generate_realistic_adjacency(N,opts=opts, verbose=verbose)
   A<-as(get.adjacency(Ag),"matrix")
   graph_seq<-matrix(0,T,nrow(A)^2)

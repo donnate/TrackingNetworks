@@ -1,6 +1,6 @@
-source("./tests_synthetic_data/test_functions.R")
-source("./spanning_trees.R")
-source("./distances.R")
+source("./tests_synthetic_data/dynamics.R")
+source("./distances/spanning_trees.R")
+source("./distances/distances.R")
 
 #### bootstrap tests for understanding the distance between two graphs of the same type
 #### These functions were designed so as to be then used as part of shiny applictions

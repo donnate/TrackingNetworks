@@ -1,10 +1,9 @@
 ##### Functions for comparing different dustances' ability to pick up change points
 
-dir="~/TrackingNetworkChanges"
-setwd(dir)
-source("./tests_synthetic_data/test_functions.R")
-source("./spanning_trees.R")
-source("./distances.R")
+
+source("./tests_synthetic_data/dynamics.R")
+source("./distances/spanning_trees.R")
+source("./distances/distances.R")
 
 
 ##########################################################################################################

@@ -2,9 +2,8 @@
 
 
 library(nettools)
-#library(ergm)
 library(igraph)
-
+source("./tools.R")
 
 
 ##########################################################################################################
@@ -46,7 +45,7 @@ generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
   }
   A<-delta_c(A,0)
   if (plot==TRUE){
-    heatmap.2(A,Rowv=FALSE, Colv=FALSE,dendrogram = "none")
+    heatmap(A,Colv = NA, Rowv = NA,main="heatmap of the adjacency matrix ")
   }
   ## test if the matrix is completely connected. OW sample an edge
   ## This is merely because we want connected components
@@ -78,7 +77,7 @@ generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
 
 ############################         More ''realistic'' random graphs             #########################
 ### -------------------------------------------------------------------------------------------------------
-generate_realistic_adjacency<-function(N,opts=1,args=list(),verbose=TRUE,...){
+generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
     ##  Description
     ##  -------------
     ##  Function for generating a simple ER graph, represented by is adjacency matrix
@@ -87,55 +86,60 @@ generate_realistic_adjacency<-function(N,opts=1,args=list(),verbose=TRUE,...){
     ##  =============================================================
     ##  N               :   Number of nodes in the graphs (int)
     ##  opts            :   what type of random graph (0: ER, 1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
-    ##  args            :   arguments for the graph
-    ##  verbose         :   boolean. Should some summaries be printed as the graph is generated (for debugging)
+    ##  args_l            :   arguments for the graph
+    ##  verbose         :   boolean. Should some summaries be printed as the graph is generated (for debugging) and the output
+    ##                      graph plotted?
     ##  ...             :   named arguments for the generation of the graph (as per igraph notations)
     ##
     ##  OUTPUT
     ##  =============================================================
     ##  A               :   adjacency matrix of an ER graph
-  if (length(args)==0){
-        args<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+  if (length(args_l)==0){
+        args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   }
+  input_list <- as.list(substitute(list(...)))
+  print(input_list)
+  #print(do.call("pow",$pow))
   ### Change argument list according to what is given as argument to the function
-  if (hasArg(p) )args$p=p
-  if (hasArg(power) )args$power=power
-  if (hasArg(islands.n)) args$islands.n=islands.n
-  if (hasArg(islands.size) )args$islands.size=islands.size
-  if (hasArg(islands.pin)) args$islands.pin=islands.pin
-  if (hasArg(n.inter)) args$n.inter=n.inter
-  if (hasArg(K)) args$K=K
-  if (hasArg(block.sizes)) args$block.sizes=block.sizes
-  if (hasArg(pm)) args$pm=pm
-  print(paste("Type of graph generated: ",opts))
+  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(pow) ){args_l$power<-input_list$pow}
+  if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
+  if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
+  if (hasArg(islands.pin)) args_l$islands.pin=input_list$islands.pin
+  if (hasArg(n.inter)) args_l$n.inter=input_list$n.inter
+  if (hasArg(K)) args_l$K=input_list$K
+  if (hasArg(block.sizes)) args_l$block.sizes=eval(input_list$block.sizes)
+  if (hasArg(pm)) args_l$pm<-eval(input_list$pm)
+  name_type_graph=c('ER', 'Power Law','Island', 'Dot Product','SBM')
+  print(paste("Type of graph generated: ",name_type_graph[opts+1]))
   if (opts==0){
-      g=erdos.renyi.game(N, args$p, type = "gnp", directed = FALSE,loops = FALSE)
+      g=erdos.renyi.game(N, args_l$p, type = "gnp", directed = FALSE,loops = FALSE)
   }
   else{
       if (opts==1){
-        if (verbose==TRUE) print(paste("power graph: p=",args$power))
-        power=args$power
+        if (verbose==TRUE) print(paste("power graph: p=",args_l$power))
+        power=args_l$power
         g=sample_pa(N, power,directed=FALSE)
       }
       else{
         if (opts==2){
-          islands.n=args$islands.n
-          islands.size=args$islands.size
-          islands.pin=args$islands.pin
-          n.inter=args$n.inter
+          islands.n=args_l$islands.n
+          islands.size=args_l$islands.size
+          islands.pin=args_l$islands.pin
+          n.inter=args_l$n.inter
           g=sample_islands(islands.n, islands.size, islands.pin, n.inter)
           if (verbose==TRUE) print(paste("island graph: islands.n=",islands.n,"islands.size"=islands.size))
         }
         else{
           if (opts==4){
-            pm <- args$pm
+            pm <- args_l$pm
             print(N)
             block.sizes=c(floor(N/3),floor(N/3),N-2*floor(N/3))
             g <- sample_sbm(N, pref.matrix=pm, block.sizes=block.sizes)
-            if (verbose==TRUE) print(paste("stochastic block model: block size", args$block.sizes))
+            if (verbose==TRUE) print(paste("stochastic block model: block size", args_l$block.sizes))
           }
           else{
-            K=args$K
+            K=args_l$K
             lpvs <- matrix(rnorm(N*K), K, N)
             lpvs <- apply(lpvs, 2, function(x) { return (abs(x)/sqrt(sum(x^2))) })
             g <- sample_dot_product(lpvs)
@@ -226,7 +230,7 @@ random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=F
   nb_edges_to_be_modified=ceiling(sum(A)/2*prop)
   nb_edges_to_be_created=rbinom(1,ceiling((sum(1-A)-nrow(A))/2),p_creation) ## have to substract the diagonal
   prob=c(1-p-p_disp,p,p_disp)
-  if verbose: print(paste("initial number of edges", sum(A)/2))
+  if (verbose){ print(paste("initial number of edges", sum(A)/2))}
   N=nrow(A)
   A_temp=A
   A_temp[upper.tri(A)]=0
