@@ -3,7 +3,7 @@ title: "Synthetic Experiments"
 output: html_notebook
 ---
 
-This notebook presents the different synthetic experiments exhibited in the associated paper, as well as provides examples for using the functions and distances developed throughout this project.
+This notebook presents the different synthetic experiments exhibited in the associated paper, as well as provides examples for using the functions and distances developed throughout this project. All of the following has been implemented in R and heavily relies on exterior libraries (igraph and nettools).
 
 # 0. Loading packages and functions
 
@@ -20,7 +20,7 @@ print("All functions loaded.")
 
 # I. Random Graph generation
 
-Here we try generating different instances of random graphs.
+Here we try generating different instances of random graphs. Indeed, if the Erdos-Renyi random graph often appears to be one of the simplest and most natural random graph to generate, numerous works throughout the literature have underlined its limitations when it comes to reproducing "real life graphs". This is why we propose to enrich our synthetic graph library (for our experiments) by synthetizing other types of random structures that have been argued to be more  realsitic: the Power Law graph (Barabasi-Albert model), an Island graph, a dot product graph and an SBM graph. All of the R igraph generation functions for these graphs have been wrapped  in the same function (*generate_realistic_adjacency*), and the following code snipppets show how to generate a variety of such different graphs.
 
 ```{r,fig.width=6, fig.height=2.5}
 N=50
@@ -44,12 +44,37 @@ generate_realistic_adjacency(N,opts=3,args=list(),verbose=TRUE,K=10)
 ```{r,fig.width=6, fig.height=2.5}
 generate_realistic_adjacency(N,opts=4,args=list(),verbose=TRUE,pm=cbind( c(0.4,0.1, 0.001), c(.1,0.2, .01),c(.001,0.01, .5)))
 ```
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+
+## II. Generate smooth evolution process
+
+```{r}
+N=70
+p0=0.15
+p=0.5
+p_disp=0.3
+p_creation=0.01
+prop=0.3
+test_smooth_RD_changes(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='./tests_synthetic_data/generated_graphs/',name_graph='ER_70nodes',path2plot='./plots_experiments/')
+
+```
+
+## III. Generate evolution process with change point
+
 
 ```{r}
 
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+## IV. Compare ability to recognize classes of graphs
+
+```{r}
+
+```
+
+
+## V. Stability analysis
+
+
+

@@ -260,8 +260,8 @@ random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=F
     src=edges[e,1]
     dest=edges[e,2]
     flip=rmultinom(1,1,prob)
-    if (flip>0){
-        if (flip==1){
+    if (which(flip>0)>1){
+        if (which(flip>0)==2){
             new_dest=sample(N-sum(A[src,])-1,1)
             sel=c(src,which(A[src,]==1) )
             sel_c=setdiff(1:N,sel)

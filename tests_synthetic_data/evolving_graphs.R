@@ -45,7 +45,6 @@ p=0.4
 
 ### -------------------------------------------------------------------------------------------------------
 test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='./tests_synthetic_data/generated_graphs/',name_graph='',path2plot='./plots/'){
-
     ##  Description
     ##  -------------
     ##  Function generating an ER graph, and letting it evolve through time. Distances between consecutive graphs are computed
@@ -85,16 +84,15 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
   dist<-matrix(0, 12+length(alphas)+1,T-1)
   graph_seq<-matrix(0,T,N^2)
   graph_seq[1,]<-as.vector(t(A))
-  library(nettools)
   for (t in 1:(T-1)){
     if (verbose==TRUE) print(paste("time: ",t))
     A_new<-random_alteration_adjacency(A,prop,p)
-    graph_seq[t+1,]<-as.vector(t(A_new))
+    graph_seq[t+1,]<-as.vector(A_new)
     hamming<-hamming_based_distance(A, A_new)
     dist[1,t]<-hamming
     dist[2,t]<-jaccard_based_distance(A,A_new)
-    sp_Anew=get_nb_ST(A_new)
-    sp_A=get_nb_ST(A)
+    sp_Anew=get_number_spanning_trees(A_new)
+    sp_A=get_number_spanning_trees(A)
     #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
     dist[3,t]=abs(log(sp_A)-log(sp_Anew))
     dist[10,t]<-2*abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
@@ -103,8 +101,6 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
     dist[8,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
     dist[9,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
     dist[10,t]=ST_distance(A,A_new,norm=TRUE)
-    dist[11,t]<-poly_distance2(A, A_new,order_max=5,alpha=0.5)
-    dist[12,t]<-poly_distance2(A, A_new,order_max=3,alpha=0.9)
     it_alpha=0
     
     

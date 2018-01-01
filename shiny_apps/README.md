@@ -1,3 +1,4 @@
-# TrackingNetworks
+# TrackingNetworks: Shiny apps
 
-Update: November 28th 2017: code just pushed to Github and under the process of being cleaned up! It should be available within two days.
+
+This set of functions was used to try to make shiny apps in order to investigate the property of the different distances. 

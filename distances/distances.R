@@ -4,8 +4,7 @@ library(sna)
 
 
 hamming_based_distance<-function(A,B){
-    ## we assume that the nodes from A1 to A2 are in correspondance (identical, no new nodes or nodes disppearing)
-    N<-nrow(A1)
+    ## we assume that the nodes from A to B are in correspondance (identical, no new nodes or nodes disppearing)
     N=nrow(A)
     return(sum(abs(A-B))/(N*(N-1)))
 }
