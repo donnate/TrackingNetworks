@@ -8,9 +8,22 @@ library(nettools)
 
 
 compare_graphs<-function(graph_seq,distance_type="poly",args=list(order_max=3,alpha=0.9)){
-  ## the input is a sequence of graphs, represented by an array 
-  ## in which each first entry indexes the time and the other two represent N x N graph adjacency matrix
-  
+    ##  Description
+    ##  -------------
+    ##  the input is a sequence of graphs, represented by an array in which, column-wise,
+    ##  each first entry indexes the time and the other two represent N x N graph adjacency matrix
+    ##
+    ##  INPUT:
+    ##  =============================================================
+    ##  graph_seq       :   (N^2+1) x T marix, where each column is a flattened adjacency matrix
+    ##                      (1st entry is the time)
+    ##  distance_type   :   what distance is used to compare the graphs (string with choice in  {"poly", "ST","HIM"   }. Default :"poly")
+    ##  args            :   additional arguments for the distance that is being used (list with named arguments)
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ## distances        :   matrix with pairwise distances between graphs
+    
   s=dim(graph_seq)
   if (is.null(s)){
     s=c(length(graph_seq))

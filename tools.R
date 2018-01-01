@@ -1,4 +1,4 @@
-##### Tool functions (just a few utility functions)
+##### (just a few utility functions)
 
 delta<-function(x,t) ifelse(x==t,1,0)
 delta_c<-function(x,t) ifelse(x!=t,1,0)
