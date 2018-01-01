@@ -418,13 +418,13 @@ get_distribution<-function(N,p_v,prop_v,B){
 test_get_dist<-function(){
     ##  Description
     ##  -------------
-    ##  Compares hhistogramns of distances 
+    ##  Compares hhistogramns of distances
   N=30
   p_v=c(0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7)
   prop_v=c(0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
   B=1000
   get_res=get_distribution(N,p_v,prop_v,B)
-  save(get_res,p_v,prop_v,N,file="~/Dropbox/Food_network/spanning_trees/get_res.RData")
+  save(get_res,p_v,prop_v,N,file="./saved_data/get_res.RData")
   m=matrix(0,length(p_v),length(prop_v))
   sd=matrix(0,length(p_v),length(prop_v))
   for (i in 1:length(p_v)){

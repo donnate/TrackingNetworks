@@ -1,4 +1,4 @@
-##### Functions for comparing distances 
+##### Functions for comparing different dustances' ability to pick up change points
 
 dir="~/TrackingNetworkChanges"
 setwd(dir)
@@ -8,7 +8,39 @@ source("./distances.R")
 
 
 
-random_comp_tests<-function(N=30,p=0.05,prop=0.05,T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
+
+
+
+### ------------------------------------------------------------------------------------------------------
+##############################      random ER graph comparison with change point       ###################
+### ------------------------------------------------------------------------------------------------------
+random_comp_tests<-function(N=30,p=0.05,T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
+    ##  Description
+    ##  -------------
+    ##  Function for generating T+1 random ER graphs, and computing distance between consecutive graphs
+    ##  (using different metrics: spanning trees, Hamming, IM, etc).
+    ##  At time T, the type of ER graphs generated changes (that is, the parameter p changes from p
+    ##  to 0.6), and we wish to study the effect on the registered distance. In this case, there is no
+    ##  evolution (in the sense that each graph is a perturbed version of the previous: here every graph
+    ##  is independent from the previous): instead, we wish to assess whether the distances are able to
+    ##  recognize graphs belonging to the same family.
+    
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  p               :   probability of edge connection in an ER graph. (float/double<1)
+    ##  T               :   number of different graphs that are generated. (int>1)
+    ##  verbose         :   boolean. Should intermediary summary messages be printed? (useful for
+    ##                      debugging. Default=TRUE
+    ##  save_graph_seq  :   boolean.Should the graphs be saved? Default=TRUE
+    ##  name_file_ext   :   string (name of the file were the graphs should be saved if save_graph_seq
+    ##                      is TRUE. Default=""
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  list            :   list with named arguments dist_random (distance between consecutive  graphs)
+    ##                      and data (a matrix where each column corresponds to a flattened graph)
+    
   print("further tests: comparison of completely random graphs, with generating regime change")
   #### Compare against totally random networks
   A<-vector("list",T)
@@ -88,9 +120,47 @@ random_comp_tests<-function(N=30,p=0.05,prop=0.05,T=21,verbose=TRUE,save_graph_s
   }
   return(list(dist_random=dist_random,data=graph_seq))
 }
+### ------------------------------------------------------------------------------------------------------
 
 
-random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T=21,loc=FALSE,verbose=FALSE,save_graph_seq=T,name_file_ext=""){
+
+
+### ------------------------------------------------------------------------------------------------------
+#######################      random ``realistic'' graph comparison with change point #####################
+### ------------------------------------------------------------------------------------------------------
+random_comp_tests_realistic<-function(N=30,opts=1,args, args2,T=21,verbose=FALSE,save_graph_seq=T,name_file_ext=""){
+    
+    ##  Description
+    ##  -------------
+    ##  Function for generating T+1 random graphs, and computing distance between consecutive graphs
+    ##  (using different metrics: spanning trees, Hamming, IM, etc).
+    ##  At time T, the type of ER graphs generated changes (that is, the parameter p changes from p
+    ##  to 0.6), and we wish to study the effect on the registered distance. In this case, there is no
+    ##  evolution (in the sense that each graph is a perturbed version of the previous: here every graph
+    ##  is independent from the previous): instead, we wish to assess whether the distances are able to
+    ##  recognize graphs belonging to the same family.
+    
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  opts            :   what type of random graph (1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
+    ##  args            :   arguments for the graph in the first dynamic period (named list
+    ##                      as per igraph documentation)
+    ##  args2           :   arguments for the graph in the second dynamic period (named list
+    ##                      as per igraph documentation)
+    ##  T               :   number of different graphs that are generated. (int>1)
+    ##  verbose         :   boolean. Should intermediary summary messages be printed? (useful for
+    ##                      debugging. Default=TRUE
+    ##  save_graph_seq  :   boolean.Should the graphs be saved? Default=TRUE
+    ##  name_file_ext   :   string (name of the file were the graphs should be saved if save_graph_seq
+    ##                      is TRUE. Default=""
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  list            :   list with named arguments dist_random (distance between consecutive  graphs)
+    ##                      and data (a matrix where each column corresponds to a flattened graph)
+    
+    
   print("further tests: comparison of completely random graphs, with generating regime change")
   #### Compare against totally random networks
   A<-vector("list",T)
@@ -111,7 +181,7 @@ random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T
     }
     else{
       #Ag_new<-graph_alteration(Ag,m2,p_disp2,p_creation,loc=loc)
-      Ag_new<-generate_realistic_adjacency(N,args,opts, verbose)
+      Ag_new<-generate_realistic_adjacency(N,args2,opts, verbose)
       A_new[[t]]<-as(get.adjacency(Ag_new),"matrix")
     }
     stree_new=get_nb_ST(A_new[[t]])
@@ -167,12 +237,69 @@ random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T
   }
   return(list(dist_random=dist_random,data=graph_seq))
 }
+### ------------------------------------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+### ------------------------------------------------------------------------------------------------------
+###############      ER graph: evolution with three phases        ########################################
+### ------------------------------------------------------------------------------------------------------
 
 random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
+    ##  Description
+    ##  -------------
+    ##  Function for generating an ER random graph, and computing distance between consecutive graphs
+    ##  as this graph evolves from time point to time point (using different metrics: ST, Hamming, IM..).
+    ##  The evolution mechanism is again the same: we chose prop % of the edges: these selected edges are
+    ##  potentially modifiable edges. Each candidate edge is then rewired with probability p, and stays in place
+    ##  with probability 1-p.
+    ##  At time t=10, the dynamics change (that is, the probability that a candidate modifiable edge
+    ##  is rewired changes from p to 0.6. At time t=16, the probability goes back to p, but the proportion
+    ##  of modifiable edges oncreases from prop to 0.2;
+    ##
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  opts            :   what type of random graph (1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
+    ##  p               :   vector of length 3 or float. If vector, the first entry corresponds to the original
+    ##                      ER graph parameter, and the two next entries to the two distinct rewiring probabilities.
+    ##                      If float, then a 3-d vector is generated as [p,p,0.6]
+    ##  prop            :   vector of length 2 or float. If vector, the two entries to the two distinct proportions
+    ##                      of modifiable edges.If float, then a 2-d vector is generated as [prop,0.2]
+    ##  T               :   number of different graphs that are generated. (int>1)
+    ##  verbose         :   boolean. Should intermediary summary messages be printed? (useful for
+    ##                      debugging. Default=TRUE
+    ##  save_graph_seq  :   boolean.Should the graphs be saved? Default=TRUE
+    ##  name_file_ext   :   string (name of the file were the graphs should be saved if save_graph_seq
+    ##                      is TRUE. Default=""
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  list            :   list with named arguments dist_changepnt (distance between consecutive  graphs)
+    ##                      and data (a matrix where each column corresponds to a flattened graph)
+  if (length(p)==1){
+    prob=p
+    p=matrix(0,3)
+    p[1]=prob
+    p[2]=prob
+    p[3]=0.6
+  }
+  if (length(prop)==1){
+    prop0=prop
+    prop=matrix(0,2)
+    prop[1]=prop0
+    prop[2]=0.2
+  }
+    
   print("further tests: comparison for random innovation, with regime change at t=10 and 16:")
-  print(paste("At t=10, the probability of a new link increases from ", p , "to 0.6, (prop=5% of edge changes)"))
-  print(paste("At t=16, the probability of a new link goes back to ", p , "but 20% of the edges are unplugged and replugged"))
+  print(paste("At t=10, the probability of a new link increases from ", p[2] , "to ", p[3], "(with identical changed proportion prop=",100*prop[2],"% of edges changed)"))
+  print(paste("At t=16, the probability of a new link goes back to ", p[2]  , "but",100*prop[3],"% of the edges are unplugged and replugged"))
   #### Compare against totally random networks
   A<-vector("list",T)
   A_new<-vector("list",T-1)
@@ -228,7 +355,6 @@ random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,save_gra
   }
   dist_changepnt=data.frame(dist_changepnt,row.names = c("ST","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
   
-  #dist_changepnt=data.frame(dist_changepnt,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
   
   
   
@@ -246,3 +372,4 @@ random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,save_gra
   }
   return(list(dist_changepnt=dist_changepnt,data=graph_seq))
 }
+### ------------------------------------------------------------------------------------------------------

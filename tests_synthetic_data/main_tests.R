@@ -24,24 +24,25 @@ p=0.4
 
 
 
-
-##########################################################################################################
-##########################################################################################################
-########### Functions for computing distances  for a sequence of evolving graphs #########################
-##########################################################################################################
-##########################################################################################################
-
-
-
+##########################################################################################################################################################
+##########################################################################################################################################################
+##########################################################################################################################################################
+########### Functions for computing distances  for a sequence of evolving graphs #########################################################################
+##########################################################################################################################################################
+##########################################################################################################################################################
+##########################################################################################################################################################
 
 
 
 
 
 
-##########################################################################################################
-########### First set of functions: simple "smooth" evolution ############################################
-##########################################################################################################
+
+##########################################################################################################################################################
+##########################################################################################################################################################
+########### First set of functions: simple "smooth" evolution ############################################################################################
+##########################################################################################################################################################
+##########################################################################################################################################################
 
 
 
@@ -177,19 +178,25 @@ test_smooth_RD_changes<-function(N,p,prop,T=11,verbose=TRUE, go_plot=TRUE,initia
 
 
 ### -------------------------------------------------------------------------------------------------------
-test_smooth_Realistic_changes<-function(N,m, p_disp=0.1,p_creation=0.01,T=11,opts=1,verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=T,path_to_graph='./tests_synthetic_data/generated_graphs/', name_file_ext="",very_verbose=F,path2plot='./plots/',args=list()){
+test_smooth_Realistic_changes<-function(N,m, p, p_disp=0.1,p_creation=0.01,T=11,opts=1,verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=T,path_to_graph='./tests_synthetic_data/generated_graphs/', name_file_ext="",very_verbose=F,path2plot='./plots/',args=list()){
     
     
     
     ##  Description
     ##  -------------
-    ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time. Different distances between consecutive graphs are computed
+    ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time.
+    ##  The evolution mechanism is the following: we chose m edges: these selected edges are
+    ##  potentially modifiable edges. Each candidate edge is then rewired with probability p, or disappears with probability p_disp, and stays in place
+    ##  with probability 1-p_disp-p. We also allow for the possibility of edges to be created with probability p_creation
+    ##  Different distances between consecutive graphs are computed
     ##
     ##  INPUT:
     ##  =============================================================
     ##  N               :   Number of nodes in the graphs (int)
-    ##  m               :   number of edges transformed between time t and t+1 (int)
+    ##  m               :   number of edges that can be potentially transformed between time t and t+1 (int)
+    ##  p               :   probability that one of the m modifiable edges is rewired (float/double<1)
     ##  p_disp          :   probability that one of the edges chosen as "transformed" disappears-- it is reassigned elswhere withprob 1-p_disp. (float/double<1)
+    ##  p_creation      :   probability that one "inexisting" edge appears.
     ##  T               :   length of the horizon (evolution period) (int>1)
     ##  opts            :   what type of random graph (1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
     ##  verbose         :   bolean. should the method be verbose?
@@ -301,10 +308,16 @@ test_smooth_Realistic_changes<-function(N,m, p_disp=0.1,p_creation=0.01,T=11,opt
 
 
 
-
+##########################################################################################################################################################
 ##########################################################################################################################################################
 ########### Second set of functions: Test evolution distance with drastic change point in evolution mechanism ############################################
 ##########################################################################################################################################################
+##########################################################################################################################################################
+
+
+
+
+
 
 ### -------------------------------------------------------------------------------------------------------
 ### first function for the simple ER case :
@@ -314,7 +327,11 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
     
     ##  Description
     ##  -------------
-    ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time. Different distances between consecutive graphs are computed
+    ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time.
+    ##  Again, the evolution mechanism is the following: we chose prop % of the edges: these selected edges are
+    ##  potentially modifiable edges. Each candidate edge is then rewired with probability p, and stays in place
+    ##  with probability 1-p.
+    ##  Different distances between consecutive graphs are computed
     ##
     ##  INPUT:
     ##  =============================================================
@@ -416,6 +433,10 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
 
 
 
+
+
+
+
 ### -------------------------------------------------------------------------------------------------------
 ### second function for more ``realistic'' random structures :
 
@@ -426,7 +447,12 @@ test_change_point_realistic<-function(N=30,m=10,m2=15,p=0.1,p2=0.1,p_disp=0.0,p_
       
       ##  Description
       ##  -------------
-      ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time. Different distances between consecutive graphs are computed
+      ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time.
+      ##  The evolution mechanism is the following: we chose m edges: these selected edges are
+      ##  potentially modifiable edges. Each candidate edge is then rewired with probability p, or disappears with probability p_disp, and stays in place
+      ##  with probability 1-p_disp-p. Here, we add a change point in the evolution mechanism. At time t=10, the number of modifiable edges changes to m2,
+      ##  the rewiring probabiity changes from p to p2, and the disappearance probability changes from p_disp to p_disp2.
+      ##  Different distances between consecutive graphs are computed.
       ##
       ##  INPUT:
       ##  =============================================================
