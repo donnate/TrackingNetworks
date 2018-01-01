@@ -1,8 +1,16 @@
 source("./tests_synthetic_data/test_functions.R")
 source("./spanning_trees.R")
 source("./distances.R")
-### generate adjacency matri
 
+#### bootstrap tests for understanding the distance between two graphs of the same type
+#### These functions were designed so as to be then used as part of shiny applictions
+#### which might explain some of their layout
+
+
+
+### --------------------------------------------------------------------
+###########        First simple bootstrap test       ###################
+### --------------------------------------------------------------------
 test_bootstrap<-function(N,args,opts=1,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
@@ -28,7 +36,23 @@ test_bootstrap<-function(N,args,opts=1,B){
     return(dist)
   })
 }
+### --------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+###############################################################################################
+###########   Functions for bootstrap generation ( one for each different distance) ###########
+###############################################################################################
+
+### --------------------------------------------------------------------
+###########  bootstrap test for polynomial distances    ################
+### --------------------------------------------------------------------
 test_bootstrap_shiny<-function(N,alpha,order_max,args,opts=1,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
@@ -47,7 +71,12 @@ test_bootstrap_shiny<-function(N,alpha,order_max,args,opts=1,B){
     return(dist)
   })
 }
+### --------------------------------------------------------------------
 
+
+### --------------------------------------------------------------------
+####### bootstrap test for polynomial distances  (2nd version)  ########
+### --------------------------------------------------------------------
 test_bootstrap_shiny2<-function(N,alpha,order_max,args,opts=1,opts2=2,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
@@ -71,8 +100,13 @@ test_bootstrap_shiny2<-function(N,alpha,order_max,args,opts=1,opts2=2,B){
     return(dist)
   })
 }
+### --------------------------------------------------------------------
 
 
+
+### --------------------------------------------------------------------
+###########  bootstrap test for Spanning Tree distances    #############
+### --------------------------------------------------------------------
 test_bootstrap_shiny_ST<-function(N,alpha,order_max,args,opts=1,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
@@ -94,8 +128,12 @@ test_bootstrap_shiny_ST<-function(N,alpha,order_max,args,opts=1,B){
     return(dist)
   })
 }
+### --------------------------------------------------------------------
 
 
+### --------------------------------------------------------------------
+###########  bootstrap test for HIM distances    ################
+### --------------------------------------------------------------------
 test_bootstrap_shiny_HIM<-function(N,alpha,order_max,args,opts=1,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
@@ -115,7 +153,18 @@ test_bootstrap_shiny_HIM<-function(N,alpha,order_max,args,opts=1,B){
     return(dist)
   })
 }
+### --------------------------------------------------------------------
 
+
+
+
+
+
+###############################################################################################
+#########################         Test function         #######################################
+###############################################################################################
+
+### --------------------------------------------------------------------
 tb<-function(){
   args<-list(power=0.9,islands.n=3,islands.size=10,islands.pin=0.3,n.inter=3,K=3,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   N=30
@@ -123,7 +172,22 @@ tb<-function(){
   B=1000
   test_bootstrap1<-test_bootstrap(N,args,opts,B)
 }
+### --------------------------------------------------------------------
 
+
+
+
+
+
+
+###############################################################################################
+#################            Comparison of distances function         #########################
+###############################################################################################
+
+
+
+
+### --------------------------------------------------------------------
 compare_spanning_trees<-function(graph_seq,args=list(order_max=3, alpha=1)){
     s=dim(graph_seq)
     N=sqrt(s[2])
@@ -174,3 +238,4 @@ compare_spanning_trees<-function(graph_seq,args=list(order_max=3, alpha=1)){
   
   return(list(Sim_Lasso=Sim_Lasso, dist1=dist1,dist2=dist2,dist3=dist3,dist4=dist4,dist5=dist5,mst1=mst1,mst2=mst2,mst3=mst3,mst4=mst4,mst5=mst5))
 }
+### --------------------------------------------------------------------

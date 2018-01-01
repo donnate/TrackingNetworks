@@ -1,6 +1,34 @@
-library(nettools)
+#### functions for generating random graphs and evolution proceeses
 
+
+library(nettools)
+#library(ergm)
+library(igraph)
+
+
+
+##########################################################################################################
+############################         Graph generation         ############################################
+##########################################################################################################
+
+############################################      ER graph        ########################################
+### ------------------------------------------------------------------------------------------------------
 generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
+    ##  Description
+    ##  -------------
+    ##  Function for generating a simple ER graph, represented by is adjacency matrix
+    
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  p               :   probability of edge connection in an ER graph. (float/double<1)
+    ##  sym             :   boolean. Is the graph directed (FALSE) or undirected (TRUE)
+    ##  plot            :   boolean. Should the final graph be plotted?
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  A               :   adjacency matrix of an ER graph
+
   ## no self edges in that model
   A<-matrix(0,N,N)
   
@@ -20,7 +48,7 @@ generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
   if (plot==TRUE){
     heatmap.2(A,Rowv=FALSE, Colv=FALSE,dendrogram = "none")
   }
-  ## test if the matrix is completely connected ow, sample an edge
+  ## test if the matrix is completely connected. OW sample an edge
   ## This is merely because we want connected components
   dest_sum<-apply(A,1,sum)
   unconnected<-which(dest_sum==0)
@@ -45,14 +73,26 @@ generate_random_adjacency<-function(N,p,sym=TRUE, plot=FALSE){
   }
   return(A)
 }
+### -------------------------------------------------------------------------------------------------------
 
 
-#library(ergm)
-library(igraph)
-
-
+############################         More ''realistic'' random graphs             #########################
+### -------------------------------------------------------------------------------------------------------
 generate_realistic_adjacency<-function(N,opts=1,verbose=TRUE,...){
-  
+    ##  Description
+    ##  -------------
+    ##  Function for generating a simple ER graph, represented by is adjacency matrix
+    
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  opts            :   what type of random graph (1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
+    ##  verbose         :   boolean. Should some summaries be printed as the graph is generated (for debugging)
+    ##  ...             :   named arguments for the generation of the graph (as per igraph notations)
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  A               :   adjacency matrix of an ER graph
   args<-list(power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   if (hasArg(power) )args$power=power
   if (hasArg(islands.n)) args$islands.n=islands.n
@@ -99,8 +139,31 @@ generate_realistic_adjacency<-function(N,opts=1,verbose=TRUE,...){
   #m2 = ergm(data ~ edges + mutual)
   #myNet<-network.initialize(5,bipartite=3)
 }
+### -------------------------------------------------------------------------------------------------------
 
+
+
+
+##########################################################################################################
+############################         Graph evolution          ############################################
+##########################################################################################################
+
+
+
+### ------------------------------------------------------------------------------------------------------
 sample_new_dest<-function(node,N){
+    ##  Description
+    ##  -------------
+    ##  helper function. Samples a new destinaton for the edge starting at node ''node'', in a graph with N nodes
+    
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  node            :   node id of the source of the edge
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  choice          :   new destination for an edge starting at ''node''
   if (node==1){
     candidates=1:(N-1)
   }
@@ -115,11 +178,26 @@ sample_new_dest<-function(node,N){
   choice=sample(candidates,1)
   return(choice)
 }
+### ------------------------------------------------------------------------------------------------------
 
-random_alteration_adjacency<-function(A,prop,p,prop_del=0){
-  ## A is the adjacency matrix that we wish to transform
-  ## A is passed as binary matrix
-  ## In this setup, we select prop % of the edges of A, and we randomly reassign them with probability p
+
+############################################      ER graph        ########################################
+### ------------------------------------------------------------------------------------------------------
+random_alteration_adjacency<-function(A,prop,p){
+    ##  Description
+    ##  -------------
+    ## A is the adjacency matrix that we wish to transform
+    ## A is passed as binary matrix
+    ## In this setup, we select prop % of the edges of A, and we randomly reassign them with probability p
+    ##  INPUT:
+    ##  =============================================================
+    ##  A               :   initial (binary) adjacency matrix
+    ##  prop            :   proportion of the edges that are potentially modified
+    ##  p               :   probability that a candidate ''modifiable'' edge is reassigned somewhhere else
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  A               :   new modified adjacency matrix
   nb_edges_to_be_modified=ceiling(sum(A)/2*prop)
   #print(paste("initial number of edges", sum(A)/2))
   N=nrow(A)
@@ -142,26 +220,40 @@ random_alteration_adjacency<-function(A,prop,p,prop_del=0){
       new_dest=sel_c[new_dest]
       A[src,new_dest]=1
       A[new_dest,src]=1
-      #print(c(src,new_dest))
-      #print(paste("number of edges after ", sum(A)/2))
     }
     A[src,dest]=0
     A[dest,src]=0
     
   }
-  #A<-A+t(A)
-  #diag(A)<-0
   A<-delta_c(A,0)
-  #print(paste("final number of edges", sum(A)/2))
   return(A)
 }
+### ------------------------------------------------------------------------------------------------------
 
 
+
+################################      graph alteration process      ######################################
+### ------------------------------------------------------------------------------------------------------
 graph_alteration<-function(g,m,p=0.1,p_disp=0,p_creation=0.01,m_disp=0,m_creation=0){
+    ##  Description
+    ##  -------------
     ### This function alters the graph given as input according to the follwoing process:
     ### m edges are selected at random, and plugged elsewhere with probability  p
     ### independently, m_disp edges are deleted with probability p_disp
     ### independently, m_created edges are created with probability p_created
+    ##  INPUT:
+    ##  =============================================================
+    ##  g               :   initial graph (igraph object)
+    ##  m               :   number of edges that are potentially modified
+    ##  p               :   probability that a candidate ''modifiable'' edge is reassigned somewhere else
+    ##  m_disp          :   number of edges that are potentially deleted
+    ##  p_disp          :   probability that a candidate ''removable'' edge is deleted
+    ##  m_disp          :   number of edges that are potentially created
+    ##  p_creation      :   probability that a candidate ''creatable'' edge is created
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  g_prime         :   new modified graph
 
   if (m<nrow(get.edgelist(g))){
     to_change<-sample(1:nrow(get.edgelist(g)),m)
@@ -219,10 +311,30 @@ graph_alteration<-function(g,m,p=0.1,p_disp=0,p_creation=0.01,m_disp=0,m_creatio
   g_prime=graph_from_adjacency_matrix(Adj_prime, mode ="undirected")
   return(g_prime)
 }
+### ------------------------------------------------------------------------------------------------------
 
 
-test_change_point_detection<-function(N, T,time_change_point=floor(T/2),p=0.3,p_new=0.6,prop=0.05,prop_new=0.05, plot=TRUE,compare_LASSO=FALSE){
-  ## N here will be the number of nodes
+##############################    test_change_point detection in   ER graph  #############################
+### ------------------------------------------------------------------------------------------------------
+test_change_point_detection<-function(N, T,time_change_point=floor(T/2),p0=0.3,p=0.3,p_new=0.6,prop=0.05,prop_new=0.05, plot=TRUE){
+    ##  Description
+    ##  -------------
+    ##  Compares how different distances detect a dynamical regime change
+    ##  INPUT:
+    ##  =============================================================
+    ##  N                :   number of nodes
+    ##  T                :   length of the process horizon
+    ##  time_change_point:   time at which the change in dynamics occurs
+    ##  p0               :   probability of edge creation in ER graph (initial graph)
+    ##  prop             :   proportion of the edges that are potentially modified (first time regime)
+    ##  p                :   probability that a candidate ''modifiable'' edge is reassigned somewhhere else (2nd time regime)
+    ##  prop_new         :   proportion of the edges that are potentially modified (first time regime)
+    ##  p_new            :   probability that a candidate ''modifiable'' edge is reassigned somewhhere else (2nd time regime)
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ## distance         :    matrix of pairwise distances between consecutive graphs
+  
   A<-generate_random_adjacency(N,p,sym=TRUE, plot=FALSE)
   distances<-matrix(0,4,(T-1))
   for ( t in 1:time_change_point){
@@ -255,9 +367,29 @@ test_change_point_detection<-function(N, T,time_change_point=floor(T/2),p=0.3,p_
   return(distances)
   
 }
+### ------------------------------------------------------------------------------------------------------
 
 
+
+
+
+
+############################################      distributions        ########################################
+### ------------------------------------------------------------------------------------------------------
 get_distribution<-function(N,p_v,prop_v,B){
+    ##  Description
+    ##  -------------
+    ##  Compares the dstributions of consecutie distances between modified graphs for spanning tree distances
+    ##  INPUT:
+    ##  =============================================================
+    ##  N                :   number of nodes
+    ##  prop_v           :   proportion of the edges that are potentially modified (vector)
+    ##  p_v              :   propbability that t amodifiable edge is modified  (vector)
+    ##  B                :   number of bootstrap samples
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ## test_dist        :    matrix of pairwise distances between consecutive graphs
   test_dist<-array(0, dim=c(length(p_v), length(prop_v), B,4))
   for (i in 1:length(p_v)){
     for (j in 1:length(prop_v)){
@@ -275,8 +407,18 @@ get_distribution<-function(N,p_v,prop_v,B){
   }
   return(test_dist)
 }
+### ------------------------------------------------------------------------------------------------------
 
+
+
+
+
+############################################      test functions        ########################################
+### ------------------------------------------------------------------------------------------------------
 test_get_dist<-function(){
+    ##  Description
+    ##  -------------
+    ##  Compares hhistogramns of distances 
   N=30
   p_v=c(0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7)
   prop_v=c(0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
@@ -299,4 +441,4 @@ test_get_dist<-function(){
   }
   return(get_res)
 }
-
+### ------------------------------------------------------------------------------------------------------

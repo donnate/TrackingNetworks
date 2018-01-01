@@ -1,6 +1,6 @@
-##### Design other tests to assess the pertinence of the metrics proposed
-##### Note that we would have to prove in each case that these are indeed metrics.
-dir="/Users/cdonnat/Dropbox/TrackingNetworkChanges"
+##### Functions for comparing distances 
+
+dir="~/TrackingNetworkChanges"
 setwd(dir)
 source("./tests_synthetic_data/test_functions.R")
 source("./spanning_trees.R")
@@ -8,7 +8,7 @@ source("./distances.R")
 
 
 
-random_comp_tests<-function(N=30,p=0.05,prop=0.05,T=21,verbose=TRUE,compare_LASSO=FALSE,save_graph_seq=T,name_file_ext=""){
+random_comp_tests<-function(N=30,p=0.05,prop=0.05,T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
   print("further tests: comparison of completely random graphs, with generating regime change")
   #### Compare against totally random networks
   A<-vector("list",T)
@@ -80,23 +80,17 @@ random_comp_tests<-function(N=30,p=0.05,prop=0.05,T=21,verbose=TRUE,compare_LASS
   
   legend(1,1,legend=c( "ST","H","IM","HIM",paste("Poly x",max(dist_random[5,]))),col=1:5,lwd=2,cex=0.7)
   
-  if(compare_LASSO==TRUE){
-    Sim_Lasso=get_Similarity(graph_seq)
-    heatmap.2(Sim_Lasso+t(Sim_Lasso),Rowv=F, Colv=F, dendrogram="none",main="heatmap of the Lasso Similarity")
-  }
-  else{
-    Sim_Lasso=FALSE
-  }
+  
   if (save_graph_seq){
     #dist=data.frame(dist,row.names = c("Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5"))
     write.table(dist_random,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_matrices_",N,"_",p,"_",name_file_ext,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
     write.table(graph_seq,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_matrices_",N,"_",p,"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
   }
-  return(list(dist_random=dist_random,data=graph_seq,Sim_Lasso=Sim_Lasso))
+  return(list(dist_random=dist_random,data=graph_seq))
 }
 
 
-random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T=21,loc=FALSE,verbose=FALSE,compare_LASSO=FALSE,save_graph_seq=T,name_file_ext=""){
+random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T=21,loc=FALSE,verbose=FALSE,save_graph_seq=T,name_file_ext=""){
   print("further tests: comparison of completely random graphs, with generating regime change")
   #### Compare against totally random networks
   A<-vector("list",T)
@@ -165,23 +159,17 @@ random_comp_tests_realistic<-function(N=30,m,m2,p_disp.p_disp2,p_creation=0.01,T
   
   legend(1,1,legend=c( "ST","H","IM","HIM",paste("Poly x",max(dist_random[5,]))),col=1:5,lwd=2,cex=0.7)
   
-  if(compare_LASSO==TRUE){
-    Sim_Lasso=get_Similarity(graph_seq)
-    heatmap.2(Sim_Lasso+t(Sim_Lasso),Rowv=F, Colv=F, dendrogram="none",main="heatmap of the Lasso Similarity")
-  }
-  else{
-    Sim_Lasso=FALSE
-  }
+  
   if (save_graph_seq){
     dist=data.frame(dist,row.names = c("Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5"))
     write.table(dist,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_comp_real_matrices_",N,"_",m,"_",name_file_ext,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
     write.table(graph_seq,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_comp_real_matrices_",N,"_",m,"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
   }
-  return(list(dist_random=dist_random,data=graph_seq,Sim_Lasso=Sim_Lasso))
+  return(list(dist_random=dist_random,data=graph_seq))
 }
 
 
-random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,compare_LASSO=FALSE,save_graph_seq=T,name_file_ext=""){
+random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
   print("further tests: comparison for random innovation, with regime change at t=10 and 16:")
   print(paste("At t=10, the probability of a new link increases from ", p , "to 0.6, (prop=5% of edge changes)"))
   print(paste("At t=16, the probability of a new link goes back to ", p , "but 20% of the edges are unplugged and replugged"))
@@ -250,17 +238,11 @@ random_comp_chnge_point_tests<-function(N,p,prop=0.05,T=21,verbose=TRUE,compare_
   points(1:(T-1),dist_changepnt[4,], type="l",col=4,xlab="time", ylab="distance between consecutive graphs")
   points(1:(T-1),dist_changepnt[5,]/max(dist_changepnt[5,]), type="l",col=5,xlab="time", ylab="distance between consecutive graphs")
   legend(1,1,c( "ST-based dist",  "H","IM","HIM",paste("Poly x",max(dist_changepnt[5,]))),col=1:5,lwd=2,cex=0.7)
-  if(compare_LASSO==TRUE){
-    Sim_Lasso=get_Similarity(graph_seq)
-    heatmap.2(Sim_Lasso+t(Sim_Lasso),Rowv=F, Colv=F, dendrogram="none",main="heatmap of the Lasso Similarity")
-  }
-  else{
-    Sim_Lasso=FALSE
-  }
+  
   if (save_graph_seq){
     #dist=data.frame(dist_changepnt,row.names = c("ST-based dist",  "H","IM","HIM","alpha=0.5,order=5"))
     write.table(dist_changepnt,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_comp_changepnt_",N,"_",m,"_",name_file_ext,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
     write.table(graph_seq,sep=" ",file = paste("/Users/cdonnat/Dropbox/Distances/write_up/plot/plot_analysis/test_random_comp_changepnt_",N,"_",p,"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
   }
-  return(list(dist_changepnt=dist_changepnt,data=graph_seq,Sim_Lasso=Sim_Lasso))
+  return(list(dist_changepnt=dist_changepnt,data=graph_seq))
 }

@@ -6,10 +6,10 @@ source("./tests_synthetic_data/test_functions.R")
 source("./spanning_trees.R")
 source("./distances.R")
 
-########### Default parameters #####################
+########### Default parameters for random graph generation  #####################
 N=30
 p=0.4
-####################################################
+#################################################################################
 
 
 

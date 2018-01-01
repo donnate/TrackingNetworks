@@ -1,3 +1,5 @@
+###  Function for testing the effect
+
 source("~/Dropbox/Distances/distances/spanning_trees.R")
 source("~/Dropbox/Distances/distances/distances.R")
 source("~/Dropbox/Distances/tests_synthetic_data/test_functions.R")
