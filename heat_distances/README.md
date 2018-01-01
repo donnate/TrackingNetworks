@@ -1,3 +1,4 @@
-# TrackingNetworks
+# TrackingNetworks: Heat distances
 
-Update: November 28th 2017: code just pushed to Github and under the process of being cleaned up! It should be available within two days.
+
+This folder contains the code for computing heat-wavelet based distances between two nstances of graphs on the same set of (identified) nodes. For practical reasons, this distance was implementef in Python.

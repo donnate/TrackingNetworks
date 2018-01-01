@@ -188,7 +188,24 @@ tb<-function(){
 
 
 ### --------------------------------------------------------------------
-compare_spanning_trees<-function(graph_seq,args=list(order_max=3, alpha=1)){
+compare_several_distances<-function(graph_seq,args=list(order_max=3, alpha=1)){
+    ##  Description
+    ##  -------------
+    ##  Compares the different distances by compting the pairwise distance matrix between the graphs in
+    ##  graph_seq, and plotting the Minimum Spanning Trees (for each type of distance: Hamming, IM, HIM,ST,
+    ##  polynomial-- the latter with parameters as specified by the users) obtained from this
+    ##  pairwise distance matrix.Ideally, we expect that if graph_seq represents a sequence of
+    ##  consecutive graphs, the MST will link consecutive graphs.
+    ##
+    ##  INPUT:
+    ##  =============================================================
+    ##  graph_seq        :   a sequence of graphs (list of size K x N x N where K is the number of graphs
+    ##                       and N is the number of nodes.)
+    ##  args             :   list (with names arguments) for the polynomial distances
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ## test_dist        :    matrix of pairwise distances between consecutive graphs
     s=dim(graph_seq)
     N=sqrt(s[2])
     dist1<-matrix(0, s[1], s[1])
@@ -222,9 +239,6 @@ compare_spanning_trees<-function(graph_seq,args=list(order_max=3, alpha=1)){
   mst4<-mst(g4,weights = edge_attr(g4, "weight") )
   g5<-graph_from_adjacency_matrix(dist5,weighted=TRUE,mode="upper")
   mst5<-mst(g5,weights = edge_attr(g5, "weight") )
-  Sim_Lasso=get_Similarity(graph_seq)
-  Sim_Lasso=Sim_Lasso+t(Sim_Lasso)
-  g6<-graph_from_adjacency_matrix(Sim_Lasso,weighted=TRUE,mode="undirected")
   go_plot=TRUE
   if (go_plot==TRUE){
     plot(mst(g1,weights = edge_attr(g1, "weight") ), vertex.size=5,main="Spanning Tree from Poly")
@@ -232,10 +246,100 @@ compare_spanning_trees<-function(graph_seq,args=list(order_max=3, alpha=1)){
     plot(mst(g3,weights = edge_attr(g3, "weight") ), vertex.size=5,main="Spanning Tree from IM")
     plot(mst(g4,weights = edge_attr(g4, "weight") ), vertex.size=5,main="Spanning Tree from HIM")
     plot(mst(g5,weights = edge_attr(g5, "weight") ), vertex.size=5,main="Spanning Tree from ST Sim")
-    plot(mst(g6,weights = -edge_attr(g6, "weight") ), vertex.size=5,main="Spanning Tree from Lasso Sim")
   }
   
   
-  return(list(Sim_Lasso=Sim_Lasso, dist1=dist1,dist2=dist2,dist3=dist3,dist4=dist4,dist5=dist5,mst1=mst1,mst2=mst2,mst3=mst3,mst4=mst4,mst5=mst5))
+  return(list(dist1=dist1,dist2=dist2,dist3=dist3,dist4=dist4,dist5=dist5,mst1=mst1,mst2=mst2,mst3=mst3,mst4=mst4,mst5=mst5))
 }
 ### --------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################################################################################
+############################             Distributions               #####################################
+##########################################################################################################
+
+
+
+### ------------------------------------------------------------------------------------------------------
+############################################      distributions        ###################################
+### ------------------------------------------------------------------------------------------------------
+get_distribution<-function(N,p_v,prop_v,B){
+    ##  Description
+    ##  -------------
+    ##  Compares the dstributions of consecutie distances between modified graphs for spanning tree distances
+    ##  INPUT:
+    ##  =============================================================
+    ##  N                :   number of nodes
+    ##  prop_v           :   proportion of the edges that are potentially modified (vector)
+    ##  p_v              :   propbability that t amodifiable edge is modified  (vector)
+    ##  B                :   number of bootstrap samples
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ## test_dist        :    matrix of pairwise distances between consecutive graphs
+    test_dist<-array(0, dim=c(length(p_v), length(prop_v), B,4))
+    for (i in 1:length(p_v)){
+        for (j in 1:length(prop_v)){
+            test_dist[i,j,,]<-sapply(1:B,FUN=function(x){
+                A<-generate_random_adjacency(N,0.4,sym=TRUE, plot=FALSE)
+                A_new<-random_alteration_adjacency(A,prop_v[j],p_v[i])
+                stree_new=get_number_spanning_trees2(A_new)
+                stree=get_number_spanning_trees2(A)
+                dist=matrix(0,4,1)
+                dist[1]<-abs(stree_new-stree)/(stree_new+stree)
+                dist[2:4]<-netdist(A, A_new,d = "HIM")
+                return(dist)
+            })
+        }
+    }
+    return(test_dist)
+}
+### ------------------------------------------------------------------------------------------------------
+
+
+
+
+### ------------------------------------------------------------------------------------------------------
+############################################      test functions        ##################################
+### ------------------------------------------------------------------------------------------------------
+test_get_dist<-function(){
+    ##  Description
+    ##  -------------
+    ##  Compares histograms of distances
+    N=30
+    p_v=c(0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7)
+    prop_v=c(0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
+    B=1000
+    get_res=get_distribution(N,p_v,prop_v,B)
+    save(get_res,p_v,prop_v,N,file="./saved_data/get_res.RData")
+    m=matrix(0,length(p_v),length(prop_v))
+    sd=matrix(0,length(p_v),length(prop_v))
+    for (i in 1:length(p_v)){
+        for (j in 1:length(prop_v)){
+            m[i,j]=mean(get_res[i,j,])
+            sd[i,j]=sd(get_res[i,j,])
+        }
+    }
+    par(mfrow=c(4,4))
+    for (i in 1:4){
+        for (j in 1:4){
+            hist(get_res[i,j,], main=paste("p= ",p_v[i], "prop=",prop_v[j]),breaks=10)
+        }
+    }
+    return(get_res)
+}
+### ------------------------------------------------------------------------------------------------------
+
+
