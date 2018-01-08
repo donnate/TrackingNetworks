@@ -98,7 +98,7 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
         args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   }
   input_list <- as.list(substitute(list(...)))
-  print(input_list)
+  #print(input_list)
   #print(do.call("pow",$pow))
   ### Change argument list according to what is given as argument to the function
   if (hasArg(p) ){ args_l$p=input_list$p}
@@ -111,7 +111,7 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
   if (hasArg(block.sizes)) args_l$block.sizes=eval(input_list$block.sizes)
   if (hasArg(pm)) args_l$pm<-eval(input_list$pm)
   name_type_graph=c('ER', 'Power Law','Island', 'Dot Product','SBM')
-  print(paste("Type of graph generated: ",name_type_graph[opts+1]))
+  if(verbose){print(paste("Type of graph generated: ",name_type_graph[opts+1]))}
   if (opts==0){
       g=erdos.renyi.game(N, args_l$p, type = "gnp", directed = FALSE,loops = FALSE)
   }
@@ -132,8 +132,9 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
         }
         else{
           if (opts==4){
-            pm <- args_l$pm
-            print(N)
+            pm=args_l$pm
+
+            if (verbose) print(N)
             block.sizes=c(floor(N/3),floor(N/3),N-2*floor(N/3))
             g <- sample_sbm(N, pref.matrix=pm, block.sizes=block.sizes)
             if (verbose==TRUE) print(paste("stochastic block model: block size", args_l$block.sizes))

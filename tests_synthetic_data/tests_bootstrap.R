@@ -11,7 +11,7 @@ source("./distances/distances.R")
 ### --------------------------------------------------------------------
 ###########        First simple bootstrap test       ###################
 ### --------------------------------------------------------------------
-test_bootstrap<-function(N,args,opts=1,B){
+test_bootstrap<-function(N,args,opts=1,B,param2test=data.frame(order_max=c(5,5,3,3,3,1),alpha=c(0.5,1.2,0.5,0.9,1,1))){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
       p=args$p
@@ -20,19 +20,17 @@ test_bootstrap<-function(N,args,opts=1,B){
       
     }
     else{
-      A<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A<-get.adjacency(A)
-      A2<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A2<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A2<-get.adjacency(A2)
     }
     
-    dist<-matrix(0,6,1)
-    dist[1]=poly_distance(A, A2,order_max=5,alpha=0.5)
-    dist[2]=poly_distance(A, A2,order_max=5,alpha=1.2)
-    dist[3]=poly_distance(A, A2,order_max=3,alpha=0.5)
-    dist[4]=poly_distance(A, A2,order_max=3,alpha=0.9)
-    dist[5]=poly_distance(A, A2,order_max=3,alpha=1)
-    dist[6]=poly_distance(A, A2,order_max=1,alpha=1)
+    dist<-matrix(0,nrow(param2test),1)
+    for ( i in 1:nrow(param2test)){
+      dist[i]=poly_distance(A, A2,order_max=param2test$order_max[i],alpha=param2test$alpha[i])
+    }
+
     return(dist)
   })
 }
@@ -62,9 +60,9 @@ test_bootstrap_shiny<-function(N,alpha,order_max,args,opts=1,B){
       
     }
     else{
-      A<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A<-generate_realistic_adjacency(N,args_l=args,opts=opts,verbose=FALSE)
       A<-as.matrix(get.adjacency(A))
-      A2<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A2<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A2<-as.matrix(get.adjacency(A2))
     }
     dist=poly_distance(A, A2,order_max,alpha=alpha)
@@ -84,7 +82,7 @@ test_bootstrap_shiny2<-function(N,alpha,order_max,args,opts=1,opts2=2,B){
       A<-generate_random_adjacency(N,p, TRUE)
     }
     else{
-      A<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A<-as.matrix(get.adjacency(A))
     }
     if (opts==0){
@@ -107,8 +105,9 @@ test_bootstrap_shiny2<-function(N,alpha,order_max,args,opts=1,opts2=2,B){
 ### --------------------------------------------------------------------
 ###########  bootstrap test for Spanning Tree distances    #############
 ### --------------------------------------------------------------------
-test_bootstrap_shiny_ST<-function(N,alpha,order_max,args,opts=1,B){
+test_bootstrap_shiny_ST<-function(N,args,opts=1,B,normalize_ST=FALSE){
   boot_samples<-sapply(1:B, FUN=function(b){
+    print(b)
     if (opts==0){
       p=args$p
       A<-generate_random_adjacency(N,p, TRUE)
@@ -116,15 +115,16 @@ test_bootstrap_shiny_ST<-function(N,alpha,order_max,args,opts=1,B){
       
     }
     else{
-      A<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A<-as.matrix(get.adjacency(A))
-      A2<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A2<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A2<-as.matrix(get.adjacency(A2))
       
     }
-    stree<-get_number_spanning_trees2(A)
-    stree2<-get_number_spanning_trees2(A2)
-    dist=abs(stree-stree2)/(stree+stree2)
+    stree<-get_number_spanning_trees(A)
+    stree2<-get_number_spanning_trees(A2)
+  
+    dist=ifelse(normalize_ST,abs(stree-stree2)/abs(0.5*(stree+stree2)),abs(stree-stree2))
     return(dist)
   })
 }
@@ -134,7 +134,7 @@ test_bootstrap_shiny_ST<-function(N,alpha,order_max,args,opts=1,B){
 ### --------------------------------------------------------------------
 ###########  bootstrap test for HIM distances    ################
 ### --------------------------------------------------------------------
-test_bootstrap_shiny_HIM<-function(N,alpha,order_max,args,opts=1,B){
+test_bootstrap_shiny_HIM<-function(N,args,opts=1,B){
   boot_samples<-sapply(1:B, FUN=function(b){
     if (opts==0){
       p=args$p
@@ -143,9 +143,9 @@ test_bootstrap_shiny_HIM<-function(N,alpha,order_max,args,opts=1,B){
       
     }
     else{
-      A<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A<-as.matrix(get.adjacency(A))
-      A2<-generate_realistic_adjacency(N,args,opts, verbose=FALSE)
+      A2<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose=FALSE)
       A2<-as.matrix(get.adjacency(A2))
       
     }

@@ -10,47 +10,52 @@ library(igraph)
 
 
 ###  --------------------------------------------------------
-get_number_spanning_trees<-function(A,adjust_disconnection=TRUE){
+get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
   ## A is the adjacency matrix of the graph
   ### Note that this works only if the graph is completely connected. Otherwise, it seems even a little meaningless.
   #A<-as.matrix(A)
   N=nrow(A)
-  B_ref<-as.matrix(A)
-  diag(B_ref)<-apply(A,1,sum)
-  if (length(which(diag(B_ref)==0))>0 ) print(paste("disconnected component(s): ",which(diag(B_ref)==0)))
-  if (length(which(diag(B_ref)==0))>0 && N>2 && adjust_disconnection==TRUE){
-    print(paste("disconnected component(s): ",which(diag(B_ref)==0)))
-    index=which(diag(B_ref)==0)
+  D<-apply(A,1,sum)  ### degree (diagonal should be the degree of each node)
+  
+  if (sum(D==0)>0 & verbose ) print(paste("isolated node(s): ",which(D==0)))
+  
+  #### This block takes care of isolated nodes
+  if (sum(which(D==0))>0 && N>2 && adjust_disconnection==TRUE){  ## adjust the disconnection
+    index=which(D==0)
     index_connected<-setdiff(1:N,index)
     A<-A[index_connected,index_connected]
     return(get_number_spanning_trees(A,adjust_disconnection=TRUE))
   }
+  #### We now have to take care of isolated blocks
   else{
     if(N<3){
-      nb=ifelse(sum(diag(B_ref))==0,0,1)
+        nb=ifelse(sum(diag(D))==0,0,1) ## 2 nodes= 1 ST
     }
     else{
-      if (length(which(diag(B_ref)==0))>0 &&  adjust_disconnection==FALSE){
+        if (length(which(diag(B_ref)==0))>0 &&  adjust_disconnection==FALSE){  ### just in case we do not want to take care of the issue
         nb=sum(abs(A))/(N*(N-1)) ## outputs the sparsity instead
-      }
-      else{
-        D=sapply(1:N, FUN=function(i){
-          return(sum(A[i,]))
-        })
-        D=diag(D)
-        lambda=eigen(D-A,only.values = T)
-        ll=lambda$values[which(lambda$values>10^(-7))]
-        nb=-log(N)+sum(log(ll))
-        if (nb==0){
-          #print("disconnected components")
-          graph=graph_from_adjacency_matrix(A, mode = "undirected")
-          index_cliques=igraph::components(graph)
-          for (l in 1:index_cliques$no){
-            selection=which(index_cliques$membership==l)
-            nb<-nb+get_number_spanning_trees(A[selection,selection])
-          }
-          
         }
+      else{
+        D<-apply(A,1,sum)
+        D=diag(D)
+        lambda=eigen(D-A,only.values = T) ## eigenvalues of the Laplacian
+        ## check the number of disconnect blocks
+        nb_blocks=sum(lambda$values<10^(-12)) ###numerical error
+        if (nb_blocks==1){
+            ### Only one connected component. Straightforward.
+            ll=lambda$values[which(lambda$values>10^(-12))]
+            nb=-log(N)+sum(log(ll))
+        }
+        else{
+            ### Several connected Components. Add up the number of ST in each component.
+            graph=graph_from_adjacency_matrix(A, mode = "undirected")
+            index_cliques=igraph::components(graph)
+            for (l in 1:index_cliques$no){
+                selection=which(index_cliques$membership==l)
+                nb<-nb+get_number_spanning_trees(A[selection,selection])
+            }
+        }
+        
       }
       
     }

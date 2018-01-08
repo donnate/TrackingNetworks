@@ -1,0 +1,213 @@
+---
+title: "Bootstrap Tests for the different distances"
+author: "Claire Donnat"
+date: "1/7/2018"
+output: html_document
+---
+
+
+In this notebook, we try to investigate the stability of the different distances. Indeed, one of our objecties is to use these distances for classification tasks. As such, a good distance should be stable in the sense that it should have smaller variance between instances of the same class wth respect to graphs belonging to another class.
+
+Hence, the analysis of the behavior of the different distances seems a good starting point in order to compare performances.
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '~/Dropbox/TrackingNetworkChanges')
+print(paste("Working directory set to",getwd()))
+source("~/Dropbox/TrackingNetworkChanges/main.R")
+print("All functions loaded.")
+
+```
+
+## I. Discriminating between different families of graphs
+
+### a. First few test: impact of the topology on the performance of the different distances.
+
+In this first step, we look at the distribution of the different distances: we generate B instances of two random graphs of the same family, and we evaluate the spread of the distribution of the distances. A desirable property of a distance is that it should pick up (at least to some level) the fact that the graphs belong to the same class, and as such, the distribution should be rather peaked around its mean, with few outliers.
+
+Another quantity worth investigating is the impact of the graph's topology on the behavior of the distance.
+#### To start with: Power-Law Graph
+
+
+We begin this review by analyzing the performance of the polynomial distance, Spanning trees, Hamming Ipsen Mikhailov and HIM distances. Here, our goal is to evaluate:
++ the impact of the topology on the performance of the different distances
++ the impact of the distance's parameters (for the polynomial distance)
+
+##### Polynomial Distances
+```{r ex_bootpol_opts1}
+N=70
+args=list(power=1.4)
+param2test=data.frame(order_max=c(5,5,3,3,3,1),alpha=c(0.5,1.2,0.5,0.9,1,1))
+dist=test_bootstrap(N,args,opts=1,B=100,param2test = param2test)
+
+names=c()
+for (i in 1:nrow(param2test)){
+  names=cbind(names,paste("O=",param2test$order_max[i],",a=",param2test$alpha[i],sep=''))
+}
+boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (a=1.4) on 100 nodes")
+```
+
+```{r bootpol_opts1_diff_alpha}
+N=70
+args=list(power=1.4)
+param2test=data.frame(order_max=3*matrix(1,30),alpha=0.1*(1:30))
+dist=test_bootstrap(N,args,opts=1,B=100,param2test = param2test)
+
+names=c()
+for (i in 1:nrow(param2test)){
+  names=cbind(names,paste("O=",param2test$order_max[i],",a=",param2test$alpha[i],sep=''))
+}
+boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (a=1.4) on 100 nodes")
+```
+
+```{r bootpol_opts1_diff_alpha}
+N=70
+powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
+dist=matrix(0,length(power_list),100)
+names=c()
+param2test=data.frame(order_max=c(3),alpha=c(0.9))
+for (it in 1:length(powerlist)){
+  args=list(power=powerlist[it])
+  dist[it,]=test_bootstrap(N,args,opts=1,B=100,param2test = param2test)
+  names=cbind(names,paste("alpha_graph=",powerlist[it]))
+}
+
+
+boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (degee varies) on 100 nodes")
+```
+
+
+###### Other distances
+```{r ex_boot_ST_opts1}
+N=70
+B=50
+powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
+dist=matrix(0,length(power_list),B)
+distH=matrix(0,length(power_list),B)
+distIM=matrix(0,length(power_list),B)
+distHIM=matrix(0,length(power_list),B)
+names=c()
+for (it in 1:length(powerlist)){
+  args=list(power=powerlist[it])
+  dist[it,]=test_bootstrap_shiny_ST(N,args,opts=1,B=B)
+  dist_temp=test_bootstrap_shiny_HIM(N,args,opts=1,B=B)
+  distH[it,]=dist_temp[1,]
+  distIM[it,]=dist_temp[2,]
+  distHIM[it,]=dist_temp[3,]
+  names=cbind(names,paste("alpha=",powerlist[it]))
+}
+
+boxplot(t(dist),names=names,main="Spanning Tree distances for a Power Law graph (varying degree) on 100 nodes")
+boxplot(t(distH),names=names,main="Hamming distances for a Power Law graph (varying degree) on 100 nodes")
+boxplot(t(distIM),names=names,main="Ipsen-Mikhailov distances for a Power Law graph (varying degree) on 100 nodes")
+
+boxplot(t(distHIM),names=names,main="HIM distances for a Power Law graph (varying degree) on 100 nodes")
+
+
+
+```
+```{r ex_boot_ST_opts1}
+N=100
+B=50
+powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
+dist=matrix(0,length(power_list),B)
+names=c()
+for (it in 1:length(powerlist)){
+  args=list(power=powerlist[it])
+  dist[it,]=test_bootstrap_shiny_ST(N,args,opts=1,B=B)
+  names=cbind(names,paste("alpha_graph=",powerlist[it]))
+}
+
+boxplot(t(dist),names=names,main="Spanning Tree distances for a Power Law graph (a=1.4) on 100 nodes")
+
+
+```
+
+
+#### Profile of the vanilla Erdos-Renyi Graph
+
+```{r bootpol_opts0_diff_p}
+N=100
+B=50
+args=list(p=0.25)
+param2test=data.frame(order_max=c(5,5,3,3,3,1),alpha=c(0.5,1.2,0.5,0.9,1,1))
+dist=test_bootstrap(N,args,opts=0,B=B,param2test = param2test)
+
+names=c()
+for (i in 1:nrow(param2test)){
+  names=cbind(names,paste("O=",param2test$order_max[i],",a=",param2test$alpha[i],sep=''))
+}
+boxplot(t(dist),names=names,main="Polynomial distances for an ER graph (p=0.25) on 100 nodes")
+### We can also try the Spanning tree distances, and HIM distances
+distST=test_bootstrap_shiny_ST(N,args,opts=0,B=B)
+dist_temp=test_bootstrap_shiny_HIM(N,args,opts=0,B=B) ##this is much slower to compute, so we reduced the number of boostrap samples
+distH=dist_temp[1,]
+distIM=dist_temp[2,]
+distHIM=dist_temp[3,]
+boxplot(t(distST),names=names,main="Spanning Tree distances for an ER graph (p=0.25) on 100 nodes")
+boxplot(t(distH),names=names,main="Hamming distances for an ER graph (p=0.25) on 100 nodes")
+boxplot(t(distIM),names=names,main="IM distances for an ER graph (p=0.25) on 100 nodes")
+boxplot(t(distHIM),names=names,main="HIM distances for an ER graph (p=0.25) on 100 nodes")
+
+
+```
+
+
+#### Profile of the Island Graph
+```{r bootpol_opts2_diff_p}
+N=100
+args=list(islands.n=7,islands.size=15,islands.pin=0.35,n.inter=7)
+param2test=data.frame(order_max=c(5,5,3,3,3,1),alpha=c(0.5,1.2,0.5,0.9,1,1))
+dist=test_bootstrap(N,args,opts=2,B=100,param2test = param2test)
+
+names=c()
+for (i in 1:nrow(param2test)){
+  names=cbind(names,paste("O=",param2test$order_max[i],",a=",param2test$alpha[i],sep=''))
+}
+boxplot(t(dist),names=names,main="Polynomial distances for an Island graph (seven 0.3-ER islands) on 105 nodes")
+```
+
+#### Profile of the SBM Graph
+
+```{r bootpol_opts4_diff_p}
+N=100
+B=50
+#args=list(block.sizes=c(35,35,35))
+param2test=data.frame(order_max=c(5,5,3,3,3,1),alpha=c(0.5,1.2,0.5,0.9,1,1))
+dist=test_bootstrap(105,args=c(),opts=4,B=B,param2test = param2test)
+
+names=c()
+for (i in 1:nrow(param2test)){
+  names=cbind(names,paste("O=",param2test$order_max[i],",a=",param2test$alpha[i],sep=''))
+}
+boxplot(t(dist),names=names,main="Polynomial distances for an SBM graph (3 even blocks) on 105 nodes")
+
+### We can also try the Spanning tree distances, and HIM distances
+distST=test_bootstrap_shiny_ST(N,args,opts=4,B=B)
+dist_temp=test_bootstrap_shiny_HIM(N,args,opts=0,B=B) ##this is much slower to compute, so we reduced the number of boostrap samples
+distH=dist_temp[1,]
+distIM=dist_temp[2,]
+distHIM=dist_temp[3,]
+boxplot(t(distST),names=names,main="Spanning Tree distances  for an SBM graph (3 even blocks) on 105 nodes")
+boxplot(t(distH),names=names,main="Hamming distances for an SBM graph (3 even blocks) on 105 nodes")
+boxplot(t(distIM),names=names,main="IM distances for an SBM graph (3 even blocks) on 105 nodes")
+boxplot(t(distHIM),names=names,main="HIM distances for an SBM graph (3 even blocks) on 105 nodes")
+
+
+```
+
+That was for trying to see if the spread of the distance within a given clas of graph was gigentic, or if it remained reasonable. In the same spirit, we can try to see what would be the results between each graph and its modified version.
+
+
+
+### Ability to distinguish between different classes of graphs.
+
+
+We now devise a classification task where we generate 100 instances of each of the 5 types of graphs that we have at our disposal. We compute the pairwise similarities between each graph, and we use a similarity-based clustering algorithm (such as Spectral Clustering or Affinity Propagation) to recover the different clusters
+
+
+```{r classsificaton problem}
+
+
+
+
+```
