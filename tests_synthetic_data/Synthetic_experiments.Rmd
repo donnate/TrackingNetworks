@@ -45,7 +45,7 @@ G=generate_realistic_adjacency(N,opts=3,args=list(),verbose=TRUE,K=10)
 
 
 
-```{r,fig.width=6, fig.height=2.5}
+```{r}
 G=generate_realistic_adjacency(N,opts=4,args=list(),verbose=TRUE,pm=cbind( c(0.4,0.1, 0.001), c(.1,0.2, .01),c(.001,0.01, .5)))
 ```
 
