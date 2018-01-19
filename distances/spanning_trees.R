@@ -15,6 +15,7 @@ get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
   ### Note that this works only if the graph is completely connected. Otherwise, it seems even a little meaningless.
   #A<-as.matrix(A)
   N=nrow(A)
+
   D<-apply(A,1,sum)  ### degree (diagonal should be the degree of each node)
   
   if (sum(D==0)>0 & verbose ) print(paste("isolated node(s): ",which(D==0)))
@@ -32,10 +33,7 @@ get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
         nb=ifelse(sum(diag(D))==0,0,1) ## 2 nodes= 1 ST
     }
     else{
-        if (length(which(diag(B_ref)==0))>0 &&  adjust_disconnection==FALSE){  ### just in case we do not want to take care of the issue
-        nb=sum(abs(A))/(N*(N-1)) ## outputs the sparsity instead
-        }
-      else{
+
         D<-apply(A,1,sum)
         D=diag(D)
         lambda=eigen(D-A,only.values = T) ## eigenvalues of the Laplacian
@@ -50,13 +48,14 @@ get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
             ### Several connected Components. Add up the number of ST in each component.
             graph=graph_from_adjacency_matrix(A, mode = "undirected")
             index_cliques=igraph::components(graph)
+            nb=0
             for (l in 1:index_cliques$no){
                 selection=which(index_cliques$membership==l)
-                nb<-nb+get_number_spanning_trees(A[selection,selection])
+                nb<-nb+get_number_spanning_trees(A[selection,selection],adjust_disconnection=TRUE)
             }
         }
         
-      }
+      
       
     }
     

@@ -1,15 +1,17 @@
 ---
 title: "Synthetic Experiments"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
-This notebook presents the different synthetic experiments exhibited in the associated paper, as well as provides examples for using the functions and distances developed throughout this project. All of the following has been implemented in R and heavily relies on exterior libraries (igraph and nettools).
+This notebook presents the different synthetic experiments exhibited in the associated paper, and provides examples for using the functions and distances developed throughout this project. All of the following has been implemented in R and heavily relies on exterior libraries (igraph and nettools).
 
 # 0. Loading packages and functions
 
-Load all the different functions
+Start by loading all the different functions.
 
-```{r setup,echo=FALSE}
+```{r setup,echo=TRUE}
 knitr::opts_knit$set(root.dir = '~/Dropbox/TrackingNetworkChanges')
 print(paste("Working directory set to",getwd()))
 source("../main.R")
@@ -22,59 +24,169 @@ print("All functions loaded.")
 
 Here we try generating different instances of random graphs. Indeed, if the Erdos-Renyi random graph often appears to be one of the simplest and most natural random graph to generate, numerous works throughout the literature have underlined its limitations when it comes to reproducing "real life graphs". This is why we propose to enrich our synthetic graph library (for our experiments) by synthetizing other types of random structures that have been argued to be more  realsitic: the Power Law graph (Barabasi-Albert model), an Island graph, a dot product graph and an SBM graph. All of the R igraph generation functions for these graphs have been wrapped  in the same function (*generate_realistic_adjacency*), and the following code snipppets show how to generate a variety of such different graphs.
 
-```{r,fig.width=6, fig.height=2.5}
+```{r, echo=TRUE}
 N=50
-generate_realistic_adjacency(N,opts=0,args=list(),verbose=TRUE,p=0.16)
+Adj=generate_realistic_adjacency(N,opts=0,args=list(),verbose=TRUE,p=0.16)
 ```
 
 
-```{r,fig.width=6, fig.height=2.5}
+```{r}
 generate_realistic_adjacency(N,opts=1,args=list(),verbose=TRUE,pow= 2.4)
 ```
-```{r,fig.width=6, fig.height=2.5}
-generate_realistic_adjacency(N,opts=2,args=list(),verbose=TRUE,islands.n=4,islands.size=18,islands.pin=0.2,n.inter=7)
-```
-```{r,fig.width=6, fig.height=2.5}
 
-generate_realistic_adjacency(N,opts=3,args=list(),verbose=TRUE,K=10)
+```{r}
+G=generate_realistic_adjacency(N,opts=2,args=list(),verbose=TRUE,islands.n=4,islands.size=18,islands.pin=0.2,n.inter=7)
 ```
 
+```{r}
+
+G=generate_realistic_adjacency(N,opts=3,args=list(),verbose=TRUE,K=10)
+```
+
 
 
 ```{r,fig.width=6, fig.height=2.5}
-generate_realistic_adjacency(N,opts=4,args=list(),verbose=TRUE,pm=cbind( c(0.4,0.1, 0.001), c(.1,0.2, .01),c(.001,0.01, .5)))
+G=generate_realistic_adjacency(N,opts=4,args=list(),verbose=TRUE,pm=cbind( c(0.4,0.1, 0.001), c(.1,0.2, .01),c(.001,0.01, .5)))
 ```
 
 
 ## II. Generate smooth evolution process
 
-```{r}
+```{r smooth er_process}
 N=70
 p0=0.15
 p=0.5
 p_disp=0.3
 p_creation=0.01
 prop=0.3
-test_smooth_RD_changes(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='./tests_synthetic_data/generated_graphs/',name_graph='ER_70nodes',path2plot='./plots_experiments/')
+dist_smooth=test_smooth_RD_changes(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='/Users/cdonnat/Dropbox/TrackingNetworkChanges/tests_synthetic_data/generated_graphs/',name_graph='ER_70nodes',path2plot='/Users/cdonnat/Dropbox/TrackingNetworkChanges/tests_synthetic_data/plots_experiments/')
 
 ```
 
+
+Try the previous for different types of topology.
+
+For instance, for a Preferential Attachment model, this evolution process spans the following distances.
+```{r smooth_PA_evol}
+N=70
+
+m=10
+p_modified=0.6
+dist_smooth_PA=test_smooth_Realistic_changes(N,m,m_disp=0,m_creation=0, p_modified, p_disp=0.3,p_creation=0.01,T=11,opts=1,alphas=c(0.1,0.4,0.9,1.2,3),verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=TRUE,path_to_graph='./tests_synthetic_data/generated_graphs/', name_file_ext="",very_verbose=F,path2plots='./tests_synthetic_data/plots_experiments/')
+    
+  
+
+```
+
+
+
+
 ## III. Generate evolution process with change point
 
+We now focus on the distances ability to capture changes in dynamics.
 
-```{r}
+```{r changepoint}
+test_ER_changepoint=test_change_point(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=TRUE)
 
+ print(test_ER_changepoint$dist) 
+  
+```
+
+
+We also try varying the type of graph to assess the distances' sensitivity to the density and topology of the graph.
+For instance,  for a Preferential Attachment graph with power 0.9 (default setting), the distances are the following:
+```{r changepoint_PA}
+change_pointPA=test_change_point_realistic(N=70,m=c(10,20),p_mod=c(0.6,0.2),p_disp=c(0.1,0.2),p_creation=c(0.0,0.0),opts=1, T=21,verbose=TRUE,m_disp=c(0,0,0),m_creation=c(2,5,0),go_plot=TRUE,initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,name_file_ext="")
+  
+  
+print(change_pointPA$dist) 
+```
+
+
+If we try a different type of Power law graph (varing the power):
+```{r changepoint_PA2}
+change_pointPA=test_change_point_realistic(N=70,m=c(10,20),p_mod=c(0.6,0.2),p_disp=c(0.1,0.2),p_creation=c(0.0,0.0),opts=1, T=21,verbose=TRUE,m_disp=c(0,0,0),m_creation=c(2,5,0),go_plot=TRUE,initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,name_file_ext="",power=2.4)
+  
+  
+print(change_pointPA$dist) 
+```
+
+
+We now test the Island graph topology (this graph only has the 30 default nodes)
+```{r changepoint_Island}
+change_pointIsland=test_change_point_realistic(N=70,m=c(10,20),p_mod=c(0.6,0.2),p_disp=c(0.1,0.2),p_creation=c(0.0,0.0),opts=2, T=21,verbose=TRUE,m_disp=c(0,0,0),m_creation=c(2,5,0),go_plot=TRUE,initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,name_file_ext="")
+  
+  
+print(change_pointIsland$dist)
+```
+
+
+In the SBM case:
+```{r changepoint_SBM}
+change_pointSBM=test_change_point_realistic(N=70,m=c(10,20),p_mod=c(0.6,0.2),p_disp=c(0.1,0.2),p_creation=c(0.0,0.0),opts=4, T=21,verbose=TRUE,m_disp=c(0,0,0),m_creation=c(2,5,0),go_plot=TRUE,initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,name_file_ext="",block.sizes=c(24,23,23))
+  
+print(change_pointSBM$dist)
+  
 ```
 
 
 ## IV. Compare ability to recognize classes of graphs
 
-```{r}
 
+
+Here we brefly compare the different distances' ability to distinguish graphs that exhibit different topological properties.
+We generate 6 E-R graphs on 60 nodes, 6 Power law graphs, 6 island graphs, as well as 6 SBM networks. We compute the pairwise distances between the different graphs. If all goes well, the distance should cluster the different topologies together, and the heatmap should exhibit a block diagonal structure.
+```{r clusters, echo=TRUE}
+
+N=60
+K=6
+A<-vector("list",4*K)
+args<-list(p=0.1,power=1.4,islands.n=3,islands.size=20,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(20,20,20),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+verbose=FALSE
+
+for (i in 1:K){
+  A[[i]]<-generate_random_adjacency(N,0.3, TRUE)
+  A[[i+K]]<-generate_realistic_adjacency(N,opts=1, verbose=verbose)
+  A[[i+K]]=as(get.adjacency(A[[i+K]]),"matrix")
+  A[[i+2*K]]<-generate_realistic_adjacency(N,opts=2, verbose=verbose,islands.n=3,islands.size=20)
+  A[[i+2*K]]=as(get.adjacency(A[[i+2*K]]),"matrix")
+  A[[i+3*K]]<-generate_realistic_adjacency(N,opts=4, verbose=verbose,block.sizes=c(20,20,20))
+  A[[i+3*K]]=as(get.adjacency(A[[i+3*K]]),"matrix")
+}
+
+print("generated")
+distances<-vector("list",8)
+names=vector("list",8)
+name_distance=c('Jaccard','Spanning Trees','Hamming','IM','HIM','Polynomial (ord=3,a=0.5)','Eigen f(lambda)=exp(-1.2*lambda)','Eigen f(lambda)=lambda. 1{lambda<2}')
+for (k in 1:8){
+  distances[[k]]=matrix(0,4*K,4*K)
+  names[[k]]=paste("Heatmap of the pairwise distances between graphs \n", name_distance[k])
+}
+
+for (j in 2:(4*K)){
+  for (i in 1:(j-1)){
+    
+    sp_Anew=get_number_spanning_trees(A[[i]])
+    sp_A=get_number_spanning_trees(A[[j]])
+    distances[[2]][i,j]=abs(log(max(sp_A,1))-log(max(1,sp_Anew)))
+    distances[[1]][i,j]<-jaccard_based_distance(A[[i]], A[[j]])
+    temp<-netdist(A[[i]], A[[j]],d = "HIM")
+    distances[[3]][i,j]=temp[1]
+    distances[[4]][i,j]=temp[2]
+    distances[[5]][i,j]=temp[3]
+    distances[[6]][i,j]<-poly_distance(A[[i]], A[[j]],order_max=3,alpha=0.5)
+    distances[[7]][i,j]<-eigen_distance(A[[i]], A[[j]],function(x){return(exp(-1.2*x))},p=2)
+    distances[[8]][i,j]<-eigen_distance(A[[i]], A[[j]],function(x){ifelse(x<2,x,0)})
+  }
+}
+
+
+for (k in 1:8){
+  distances[[k]]=distances[[k]]+t(distances[[k]])
+  heatmap.2(distances[[k]],dendrogram='none', Rowv=FALSE, Colv=FALSE,trace='none',main=names[[k]])
+}
 ```
 
-
-## V. Stability analysis
 
 
 

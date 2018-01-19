@@ -46,7 +46,7 @@ for (i in 1:nrow(param2test)){
 boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (a=1.4) on 100 nodes")
 ```
 
-```{r bootpol_opts1_diff_alpha}
+```{r bootpol_opts1_diff_graph}
 N=70
 args=list(power=1.4)
 param2test=data.frame(order_max=3*matrix(1,30),alpha=0.1*(1:30))
@@ -62,7 +62,7 @@ boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (a=
 ```{r bootpol_opts1_diff_alpha}
 N=70
 powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
-dist=matrix(0,length(power_list),100)
+dist=matrix(0,length(powerlist),100)
 names=c()
 param2test=data.frame(order_max=c(3),alpha=c(0.9))
 for (it in 1:length(powerlist)){
@@ -80,7 +80,7 @@ boxplot(t(dist),names=names,main="Polynomial distances for a Power Law graph (de
 ```{r ex_boot_ST_opts1}
 N=70
 B=50
-powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
+power_list=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)
 dist=matrix(0,length(power_list),B)
 distH=matrix(0,length(power_list),B)
 distIM=matrix(0,length(power_list),B)
@@ -93,7 +93,7 @@ for (it in 1:length(powerlist)){
   distH[it,]=dist_temp[1,]
   distIM[it,]=dist_temp[2,]
   distHIM[it,]=dist_temp[3,]
-  names=cbind(names,paste("alpha=",powerlist[it]))
+  names=cbind(names,paste("alpha=",power_list[it]))
 }
 
 boxplot(t(dist),names=names,main="Spanning Tree distances for a Power Law graph (varying degree) on 100 nodes")
@@ -105,7 +105,7 @@ boxplot(t(distHIM),names=names,main="HIM distances for a Power Law graph (varyin
 
 
 ```
-```{r ex_boot_ST_opts1}
+```{r ex_boot_ST_opts1_2}
 N=100
 B=50
 powerlist=c(0.2,0.4,0.6,0.8,1.0,1.4,1.7,3,3.5)

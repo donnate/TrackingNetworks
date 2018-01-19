@@ -44,7 +44,7 @@ p=0.4
 
 
 ### -------------------------------------------------------------------------------------------------------
-test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='./tests_synthetic_data/generated_graphs/',name_graph='',path2plot='./plots/'){
+test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1,0.4,0.9,1.2,3),verbose=TRUE, go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, name_file_ext="",path_to_graph='./tests_synthetic_data/generated_graphs/',name_graph='',path2plots='./tests_synthetic_data/plots_experiments/'){
     ##  Description
     ##  -------------
     ##  Function generating an ER graph, and letting it evolve through time. Distances between consecutive graphs are computed
@@ -60,14 +60,14 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
     ##  p_creation      :   probability that a "non-existing" edge is added to the new graph
     ##  T               :   length of the horizon (evolution period) (int>1)
     ##  alphas          :   list of parameters to try for the exponential eigenvalue distances (f(lambda)=exp(-alpha*lambda))
-    ##  verbose         :   bolean. should the method be verbose?
+    ##  verbose         :   boolean. should the method be verbose?
     ##  go_plot         :   should the algorithm print the dstance curves (bolean, Default: TRUE)
     ##  initial_message :   should a summary first message be printed? (bolean, Default: TRUE)
     ##  save_graph_seq  :   should the whole graph sequence be saved in a matrix? (bolean, Default: TRUE)
     ##  name_file_ext   :   string for the name of the graph seq. Default=""
     ##  path_to_graph   :   string indicating where the graph seq should be saved. Default='./tests_synthetic_data/generated_graphs/'
     ##  name_graph      :   name of the graph sequence. Default=''
-    ##  path2plot       :   string indicating where the plots should be saved.  Default='./plots/'
+    ##  path2plots       :   string indicating where the plots should be saved.  Default='./plots/'
     ##
     ##  OUTPUT
     ##  =============================================================
@@ -81,7 +81,7 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
     print(paste("At each time iteration, ",100*prop, "% of nodes are randomly reassigned (ER-model)"))
   }
   A<-generate_random_adjacency(N,p, TRUE)
-  dist<-matrix(0, 12+length(alphas)+1,T-1)
+  dist<-matrix(0, 10+length(alphas)+1,T-1)
   graph_seq<-matrix(0,T,N^2)
   graph_seq[1,]<-as.vector(t(A))
   for (t in 1:(T-1)){
@@ -93,9 +93,8 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
     dist[2,t]<-jaccard_based_distance(A,A_new)
     sp_Anew=get_number_spanning_trees(A_new)
     sp_A=get_number_spanning_trees(A)
-    #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[3,t]=abs(log(sp_A)-log(sp_Anew))
-    dist[10,t]<-2*abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
+    #dist[3,t]<-abs(sp_Anew-sp_A)/max(sp_A+sp_Anew,1)
+    dist[3,t]=abs(log(max(sp_A,1))-log(max(sp_Anew,1)))
     dist[4:6,t]<-netdist(A, A_new,d = "HIM")
     dist[7,t]<-poly_distance(A, A_new,order_max=5,alpha=0.5)
     dist[8,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
@@ -111,11 +110,11 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
       else{
         cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
       }
-      dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
+      dist[10+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
       it_alpha=it_alpha+1
       
     }
-    dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
+    dist[10+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
     it_alpha=it_alpha+1
     cols=c(cols,"f(l)= l. 1(l<2)")
   }
@@ -124,37 +123,70 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
   
   
   
-  if(go_plot==TRUE){
-    plot(1:(T-1), 1-dist[2,], type='l',col=2, xlab="time", ylab="distance", ylim=c(0,1),main="Distances for  small consecutive random changes",cex=0.7)
+  if(go_plot==TRUE){   
+  	  colors4plots<-c(brewer.pal(n=9,name="Set1"),brewer.pal(n=9,name="Pastel1"))
+      
+      ######################################################################################################
+      #############################       Raw plots            #############################################
+    plot(1:(T-1), 1-dist[2,], type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Distances for  small consecutive random changes",cex=0.7)
     for (j in 3:6){
-      points(1:(T-1), dist[j,], type='l',col=j)
+      points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    legend(1,1,c("Jaccard","Spanning Trees","Hamming","IM","HIM"),col=2:6,lty=1,lwd = 2,cex=0.7)
+    legend(0,1,c("Jaccard","Spanning Trees","Hamming","IM","HIM"),col=colors4plots[2:6],lty=1,lwd = 2,cex=0.7)
    
     
-     plot(1:(T-1), dist[7,], type='l',col=7, xlab="time", ylab="distance", ylim=c(0,max(dist[7:9,])),main="Polynomial Distances for  small consecutive random changes",cex=0.7)
+    plot(1:(T-1), dist[7,], type='l',col=colors4plots[7], xlab="time", ylab="distance", ylim=c(0,max(dist[7:9,])),main="Polynomial Distances for  small consecutive random changes",cex=0.7)
     for (j in 8:9){
-      points(1:(T-1), dist[j,], type='l',col=j)
+      points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    legend(1,max(dist[7:9,]),c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3",paste("poly 2 alpha=0.5,order=5 (x", signif(max(dist[11,]),4),")"),paste("poly2 alpha=0.9,order=3 (x", signif(max(dist[12,]),4),")")),col=7:9,lty=1,lwd = 2,cex=0.7)
+    legend(1,max(dist[7:9,]),c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3"),col=colors4plots[7:9],lty=1,lwd = 2,cex=0.7)
     ### Global plot
-    pdf(paste(path2plots,'smooth_rdm_changes_R.pdf',sep=''),width=6,height=4,paper='special')
-    plot(1:(T-1), 1-dist[2,], type='l',col=2, xlab="time", ylab="distance", ylim=c(0,1),main="Distances for  small consecutive random changes",cex=0.7)
-    for (j in 3:12){
-      if (j>7){
-        points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=j)
-      }
-      else{
-        points(1:(T-1), dist[j,], type='l',col=j)
-      }
+    #pdf(paste(path2plots,'smooth_rdm_changes_R.#pdf',sep=''),width=8,height=4,paper='special')
+    par(bty="l",las=1,lwd=1,cex=0.7,oma = c(1, 1, 1, 1), mar = c(6, 3, 3.5, 2))
+    plot(1:(T-1), 1-dist[2,], type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Distances for  small consecutive random changes",cex=0.7)
+    for (j in 3: nrow(dist)){
+      
+        points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
+      
     }
-    #legend("topright", inset=c(-0.2,0), legend=c("A","B"), pch=c(1,3), title="Group")
-    par(xpd=TRUE)
-    legend("topright", inset=c(-0.5,0), legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM",paste("alpha=0.5,order=5 (x", signif(max(dist[7,]),4),")"),paste("alpha=0.5,order=3 (x", signif(max(dist[8,]),4),")"),paste("alpha=0.9,order=3 (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"),paste("poly 2 alpha=0.5,order=5 (x", signif(max(dist[11,]),4),")"),paste("poly2 alpha=0.9,order=3 (x", signif(max(dist[12,]),4),")")),col=2:12,lty=1,lwd = 2,cex=0.7)
-    #legend(1,max(dist[7:9,]),c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3"),col=7:9,lty=1,lwd = 2,cex=0.7)  }
-    dev.off()
+    legend("topleft", legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM","a=0.5,ord=5","a=0.5,ord=3","a=0.9,ord=3","ST norm ",cols),col=colors4plots[2:nrow(dist)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    
+    ######################################################################################################
+    #############################       Relative  amplitude plots            #############################
+    
+    plot(1:(T-1), (1-dist[2,])/max(1-dist[2,]), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Distances for  small consecutive random changes",cex=0.7)
+    for (j in 3:6){
+        points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+    }
+    legend(1,1,c(paste("Jaccard ",round(max(1-dist[2,]),4)),paste("Spanning Trees",round(max(dist[3,]),4)),paste("Hamming",round(max(dist[4,]),4)),
+                 paste("IM",round(max(dist[5,]),4)),paste("HIM",round(max(dist[6,]),4))),col=colors4plots[2:6],lty=1,lwd = 2,cex=0.7)
+    
+    
+    plot(1:(T-1), dist[7,]/max(dist[7,]), type='l',col=colors4plots[7], xlab="time", ylab="distance", ylim=c(0,max(dist[7:9,])),main="Polynomial Distances for  small consecutive random changes",cex=0.7)
+    for (j in 8:9){
+        points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+    }
+    legend(1,max(dist[7:9,]),c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3"),col=colors4plots[7:9],lty=1,lwd = 2,cex=0.7)
+    ### Global plot
+    #pdf(paste(path2plots,'smooth_rdm_changes_R_rel_amplitude.#pdf',sep=''),width=8,height=4,paper='special')
+    par(bty="l",las=1,lwd=1,cex=0.7,oma = c(1, 1, 1, 1), mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    plot(1:(T-1), (1-dist[2,])/max(1-dist[2,]), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="(Normalized) Distances for  small consecutive random changes",cex=0.7)
+    for (j in 3:nrow(dist)){
+        points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+        
+        
+    }
+    legend("topleft",  legend=c(paste("Jaccard  x",round(max(1-dist[2,]),3)),
+                                        paste("Spanning Trees  x",round(max(dist[3,]),3)),paste("Hamming x",round(max(dist[4,]),3)),
+                                        paste("IM x",round(max(dist[5,]),3)),paste("HIM  x",round(max(dist[6,]),3)),
+                                        paste("a=0.5,ord=5  (x", signif(max(dist[7,]),3),")"),paste("a=0.5,ord=3  (x", signif(max(dist[8,]),3),")"),
+                                        paste("a=0.9,ord=3  (x", signif(max(dist[9,]),3),")"),paste("ST norm  (x", signif(max(dist[10,]),3),")"),cols),
+                                        col=colors4plots[2:nrow(dist)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
   }
-  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
+  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","a=0.5,ord=5","a=0.5,ord=3","a=0.9,ord=3","ST norm",cols))
   if (save_graph_seq){
     write.table(dist,sep=",",file = paste(path_to_graph,N,"_",p,"_",name_graph,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
     write.table(graph_seq,sep=",",file = paste(path_to_graph,N,"_",p,"_",name_graph,".txt",sep=""),row.names = FALSE,col.names = FALSE)
@@ -173,7 +205,7 @@ test_smooth_RD_changes<-function(N,p0,p,p_disp,p_creation,prop,T=11,alphas=c(0.1
 
 
 ### -------------------------------------------------------------------------------------------------------
-test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p_disp=0.1,p_creation=0.01,T=11,opts=1,alphas=c(0.1,0.4,0.9,1.2,3),verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=T,path_to_graph='./tests_synthetic_data/generated_graphs/', name_file_ext="",very_verbose=F,path2plot='./plots/',...){
+test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p_disp=0.1,p_creation=0.01,T=11,opts=1,alphas=c(0.1,0.4,0.9,1.2,3),verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=T,path_to_graph='./tests_synthetic_data/generated_graphs/', name_file_ext="",very_verbose=F,path2plots='./tests_synthetic_data/plots_experiments/',...){
     
     
     
@@ -204,7 +236,7 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
     ##  name_file_ext   :   string for the name of the graph seq. Default=""
     ##  path_to_graph   :   string indicating where the graph seq should be saved. Default='./tests_synthetic_data/generated_graphs/'
     ##  name_graph      :   name of the graph sequence. Default=''
-    ##  path2plot       :   string indicating where the plots should be saved.  Default='./plots/'
+    ##  path2plots       :   string indicating where the plots should be saved.  Default='./plots/'
     ##  ...             :   additional named parameters for initial graph generation (as per igraph nomenclature)
     ##
     ##  OUTPUT
@@ -213,7 +245,7 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
     
   
   ##### 1> Generate initial random matrix
-  args<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+  args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
   input_list <- as.list(substitute(list(...)))
   if (hasArg(p) ){ args_l$p=input_list$p}
@@ -226,11 +258,11 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
   if (hasArg(block.sizes)) args_l$block.sizes=input_list$block.sizes
   if (hasArg(pm)) args_l$pm=input_list$pm
   
-  Ag<-generate_realistic_adjacency(N,opts=opts, args=args, verbose=TRUE)
+  Ag<-generate_realistic_adjacency(N,opts=opts, args_l=args_l, verbose=TRUE)
   A<-as(get.adjacency(Ag),"matrix")
   graph_seq<-matrix(0,T,nrow(A)^2)
   graph_seq[1,]<-as.vector(t(A))
-  dist<-matrix(0, 18,T-1)
+  dist<-matrix(0, 10+length(alphas)+1,T-1)
   
   if (initial_message==TRUE){
     print("Investigating the distance for evolution of a graph over time with random changes:")
@@ -253,18 +285,15 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
     hamming<-hamming_based_distance(A, A_new)
     dist[1,t]<-sum(abs(A-A_new))/(N*(N-1))
     dist[2,t]<-jaccard_based_distance(A,A_new)
-    sp_Anew=get_nb_ST(A_new)
-    sp_A=get_nb_ST(A)
-    #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[3,t]=abs(log(sp_A)-log(sp_Anew))
-    #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
+    sp_Anew=get_number_spanning_trees(A_new)
+    sp_A=get_number_spanning_trees(A)
+    #print(c(sp_A,sp_Anew))
+    dist[3,t]=abs(log(max(sp_A,1))-log(max(sp_Anew,1)))
     dist[4:6,t]<-netdist(A, A_new,d = "HIM")
     dist[7,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
     dist[8,t]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
     dist[9,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
-    dist[10,t]=abs(sp_A-sp_Anew)/(sp_A+sp_Anew)
-    dist[11,t]<-poly_distance2(A, A_new,order_max=5,alpha=0.5)
-    dist[12,t]<-poly_distance2(A, A_new,order_max=3,alpha=0.9)
+    dist[10,t]=abs(sp_A-sp_Anew)/max(sp_A+sp_Anew,1)
     it_alpha=0
     for (alpha in alphas){
       if (it_alpha==0){
@@ -273,27 +302,62 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
       else{
         cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
       }
-      dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
+      dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
       it_alpha=it_alpha+1
       
     }
-    dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
+    dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
     it_alpha=it_alpha+1
     cols=c(cols,"f(l)= l. 1(l<2)")
     Ag<-Ag_new
   }
-  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=3","alpha=0.7,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
+  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","a=0.5,ord=3","a=0.7,ord=3","a=0.9,ord=3","ST norm",cols))
   max_poly=max(dist[7,])
+  
+  
+  
+  
+  
   if (go_plot==TRUE){
-    plot(1:(T-1), 1-dist[2,], type='l',col=2, xlab="time", ylab="distance", ylim=c(0,1),main="distances with a change of regime at t=10")
+  	colors4plots<-c(brewer.pal(n=9,name="Set1"),brewer.pal(n=9,name="Pastel1"))
+    #pdf(paste(path2plots,'smooth_rdm_changes_realistic_R1.#pdf',sep=''),width=8,height=4,paper='special')
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    plot(1:(T-1), 1-dist[2,], type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Vanilla distances (smooth evolution)")
     for (j in 3:6){
-      points(1:(T-1), dist[j,], type='l',col=j)
+      points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    for (j in 7:12){
-      points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=j)
+    points(1:(T-1), dist[10,], type='l',col=colors4plots[10])
+    legend("topleft",   legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM","ST norm "),col=colors4plots[c(2:6,10)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    #pdf(paste(path2plots,'smooth_rdm_changes_realistic_R1_poly.#pdf',sep=''),width=8,height=4,paper='special')
+    plot(1:(T-1), dist[7,], type='l',col=colors4plots[7], ylim=c(0,max(dist[c(8:9,11:nrow(dist)),])),main="Polynomial and spectral distances (smooth evolution)")
+    for (j in c(8:9,11:nrow(dist))){
+      points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    par(xpd=TRUE)
-    legend("topright", inset=c(-0.5,0), legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM",paste("alpha=0.5,order=5 (x", signif(max(dist[7,]),4),")"),paste("alpha=0.5,order=3 (x", signif(max(dist[8,]),4),")"),paste("alpha=0.9,order=3 (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"),paste("poly 2 alpha=0.5,order=5 (x", signif(max(dist[11,]),4),")"),paste("poly2 alpha=0.9,order=3 (x", signif(max(dist[12,]),4),")")),col=2:12,lty=1,lwd = 2,cex=0.7)
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    legend("topright",  inset=c(-0.1,0) ,legend=c("a=0.5,ord=5","a=0.5,ord=3","a=0.9,or=3",cols),col=colors4plots[c(7:9,11:nrow(dist))],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    
+    #pdf(paste(path2plots,'smooth_rdm_changes_realistic_rel_amplitude.#pdf',sep=''),width=8,height=4,paper='special')
+    plot(1:(T-1), (1-dist[2,])/max(1-dist[2,]), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="(Normalized) Distances for  small consecutive random changes",cex=0.7)
+    for (j in 3:nrow(dist)){
+        points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+        
+        
+    }
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    #par( xpd=TRUE)
+    legend("topright",  inset=c(-0.1,0) , legend=c(paste("Jaccard ",round(max(1-dist[2,]),4)),
+    paste("Spanning Trees  ",round(max(dist[3,]),4)),paste("Hamming  ",round(max(dist[4,]),4)),
+    paste("IM ",round(max(dist[5,]),4)),paste("HIM ",round(max(dist[6,]),4)),
+    paste("alpha=0.5,order=5  (x", signif(max(dist[7,]),4),")"),paste("alpha=0.5,order=3 (x", signif(max(dist[8,]),4),")"),
+    paste("alpha=0.9,order=3  (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"),cols),
+    col=colors4plots[2:nrow(dist)],lty=1,lwd = 2,cex=0.7)
+    #legend(1,max(dist[7:9,]),c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3"),col=colors4plots[7]:9,lty=1,lwd = 2,cex=0.7)  }
+    #dev.off()
+    
   }
   if (save_graph_seq){
     #dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=3","alpha=0.7,order=5"))
@@ -330,7 +394,7 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
 ### -------------------------------------------------------------------------------------------------------
 ### first function for the simple ER case :
 
-test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=T, path_to_graph='./tests_synthetic_data/generated_graphs/',name_file_ext="",path2plot='./plots/'){
+test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,verbose=FALSE,go_plot=TRUE,initial_message=TRUE,save_graph_seq=TRUE, path_to_graph='./tests_synthetic_data/generated_graphs/',name_file_ext="",path2plots='./tests_synthetic_data/plots_experiments/',alphas=c(0.1,0.4,0.9,1.2,3)){
     
     
     ##  Description
@@ -357,7 +421,7 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
     ##  name_file_ext   :   string for the name of the graph seq. Default=""
     ##  path_to_graph   :   string indicating where the graph seq should be saved. Default='./tests_synthetic_data/generated_graphs/'
     ##  name_graph      :   name of the graph sequence. Default=''
-    ##  path2plot       :   string indicating where the plots should be saved.  Default='./plots/'
+    ##  path2plots       :   string indicating where the plots should be saved.  Default='./plots/'
     ##
     ##  OUTPUT
     ##  =============================================================
@@ -369,11 +433,11 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
     print(paste("An ER graph with N=", N, "nodes is considered, with edge proba=",p))
     print(paste("At time t=10, the proportion of nodes randomly reassigned changes from", prop, " to ",prop2, "with new connection proba= ", p2))
   }
-  alphas=c(0.1,0.4,0.9,1.2,3)
+  
   A<-generate_random_adjacency(N,p0)
   graph_seq<-matrix(0,T,N^2)
   graph_seq[1,]<-as.vector(t(A))
-  dist<-matrix(0, 18,T-1)
+  dist<-matrix(0, 10+length(alphas)+1,T-1)
   for (t in 1:(T-1)){
     if (verbose==TRUE) print(paste("time: ",t))
     if(t<10){
@@ -386,17 +450,15 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
     hamming<-hamming_based_distance(A, A_new)
     dist[1,t]<-1/(N*(N-1))*sum(abs(A-A_new))
     dist[2,t]<-jaccard_based_distance(A,A_new)
-    sp_Anew=get_nb_ST(A_new)
-    sp_A=get_nb_ST(A)
+    sp_Anew=get_number_spanning_trees(A_new)
+    sp_A=get_number_spanning_trees(A)
     #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[3,t]=abs(log(sp_A)-log(sp_Anew))
+    dist[3,t]=abs(log(max(sp_A,1))-log(max(sp_Anew,1)))
     dist[4:6,t]<-netdist(A, A_new,d = "HIM")
-    dist[7,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
-    dist[8,t]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
+    dist[7,t]<-poly_distance(A, A_new,order_max=5,alpha=0.5)
+    dist[8,t]<-poly_distance(A, A_new,order_max=3,alpha=0.7)
     dist[9,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
-    dist[10,t]=abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[11,t]<-poly_distance2(A, A_new,order_max=5,alpha=0.5)
-    dist[12,t]<-poly_distance2(A, A_new,order_max=3,alpha=0.9)
+    dist[10,t]=abs(sp_Anew-sp_A)/max(sp_A+sp_Anew,1)
     it_alpha=0
     
     for (alpha in alphas){
@@ -406,29 +468,62 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
       else{
         cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
       }
-      dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
+      dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
       it_alpha=it_alpha+1
       
     }
-    dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
+    dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
     it_alpha=it_alpha+1
     cols=c(cols,"f(l)= l. 1(l<2)")
     A<-A_new
   }
-  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
+  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
   
   
   max_poly=max(dist[7,])
   if (go_plot==TRUE){
-    plot(1:(T-1), 1-dist[2,], type='l',col=2, xlab="time", ylab="distance", ylim=c(0,1),main="distances with a change of regime at t=10")
-    for (j in 3:6){
-      points(1:(T-1), dist[j,], type='l',col=j)
-    }
-    for (j in 7:12){
-      points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=j)
-    }
-    par(xpd=TRUE)
-    legend("topright", inset=c(-0.5,0), legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM",paste("alpha=0.5,order=5 (x", signif(max(dist[7,]),4),")"),paste("alpha=0.5,order=3 (x", signif(max(dist[8,]),4),")"),paste("alpha=0.9,order=3 (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"),paste("poly 2 alpha=0.5,order=5 (x", signif(max(dist[11,]),4),")"),paste("poly2 alpha=0.9,order=3 (x", signif(max(dist[12,]),4),")")),col=2:12,lty=1,lwd = 2,cex=0.7)
+  	  colors4plots<-c(brewer.pal(n=9,name="Set1"),brewer.pal(n=9,name="Pastel1"))
+      #pdf(paste(path2plots,'change_point_ER_R1.#pdf',sep=''),width=8,height=4,paper='special')
+      par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+      plot(1:(T-1), 1-dist[2,], type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="distances with a change of regime at t=10")
+      for (j in 3:6){
+          points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
+      }
+      points(1:(T-1), dist[10,], type='l',col=colors4plots[10])
+      legend("topright",  inset=c(-0.1,0) ,legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM","ST norm "),col=colors4plots[c(2:6,10)],lty=1,lwd = 2,cex=0.7)
+      #dev.off()
+      
+      #pdf(paste(path2plots,'change_point_ER_poly.#pdf',sep=''),width=6,height=4,paper='special')
+      par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+      plot(1:(T-1), dist[7,],ylim=c(0,max(dist[c(8:9,11: nrow(dist)),])), type='l',col=colors4plots[7])
+      for (j in c(8:9,11: nrow(dist))){
+          points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
+      }
+      legend("topright", inset=c(-0.1,0), legend=c("a=0.5,ord=5","a=0.5,ord=3","a=0.9,ord=3",cols),col=colors4plots[c(7:9,11: nrow(dist))],lty=1,lwd = 2,cex=0.7)
+      #dev.off()
+      
+      
+      #pdf(paste(path2plots,'changepoint_ER_rel_amplitude.#pdf',sep=''),width=8,height=4,paper='special')
+      plot(1:(T-1), (1-dist[2,])/max(1-dist[2,]), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Distances, change of regime at t=10",cex=0.7)
+      names=c(paste("Jaccard ",round(max(1-dist[2,]),4)),
+      paste("Spanning Trees",round(max(dist[3,]),4)),paste("Hamming",round(max(dist[4,]),4)),
+      paste("IM",round(max(dist[5,]),4)),paste("HIM",round(max(dist[6,]),4)),
+      paste("a=0.5,ord=5 (x", signif(max(dist[7,]),4),")"),paste("a=0.5,ord=3 (x", signif(max(dist[8,]),4),")"),
+      paste("a=0.9,ord=3 (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"))
+      for (j in 3: nrow(dist)){
+          points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+          if (j>10){
+              it_j=j-10
+              alpha=alphas[it_j]
+              names=c(names, paste("eigen f(x)=exp(",alpha,"x)  x",round(max(dist[j,]),4)))
+              
+          }
+          
+          
+      }
+      
+      legend("topleft", legend=names,col=colors4plots[2: nrow(dist)],lty=1,lwd = 2,cex=0.7)
+      #dev.off()
   }
   if (save_graph_seq){
     #dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=3","alpha=0.7,order=5"))
@@ -448,7 +543,10 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
 ### -------------------------------------------------------------------------------------------------------
 ### second function for more ``realistic'' random structures :
 
-test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(0.0,0.0),p_creation=c(0.0,0.0),opts=1, T=21,verbose=TRUE,m_disp=0,m_disp2=0,m_creation=5,go_plot=TRUE,initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,path_to_graph='./plots/',name_file_ext="",...){
+test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(0.0,0.0),
+p_creation=c(0.0,0.0),opts=1, T=21,verbose=TRUE,m_disp=0,m_creation=5,go_plot=TRUE,
+initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,path_to_graph='./plots/',
+path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
   if (initial_message==TRUE){
       
       
@@ -484,7 +582,7 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
       ##  name_file_ext   :   string for the name of the graph seq. Default=""
       ##  path_to_graph   :   string indicating where the graph seq should be saved. Default='./tests_synthetic_data/generated_graphs/'
       ##  name_graph      :   name of the graph sequence. Default=''
-      ##  path2plot       :   string indicating where the plots should be saved.  Default='./plots/'
+      ##  path2plots       :   string indicating where the plots should be saved.  Default='./plots/'
       ##  ...             :   additional named parameters for the initial graph generation (as per igraph nomenclature)
       ##
       ##  OUTPUT
@@ -495,11 +593,11 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
     print("Investigating the ability of the distance to detect dynamic regime changes")
     
     print(paste("A graph with N=", N, "nodes is considered as per creation model ",opts))
-    print(paste("At time t=10, the number of randomly reassigned edges changes from", m, " to ",m2, "with new change proba= ", p2, " vs ", p, "and deletion",p_disp ))
+    print(paste("At time t=10, the number of randomly reassigned edges changes from", m[1], " to ",m[2], "with new change proba= ", p[2], " vs ", p[1], "and deletion",p_disp[2] ))
   }
   alphas=c(0.1,0.4,0.9,1.2,3)
   ##### 1> Generate initial random matrix
-  args<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+  args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
   input_list <- as.list(substitute(list(...)))
   #print(do.call("pow",$pow))
@@ -513,11 +611,11 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
   if (hasArg(K)) args_l$K=input_list$K
   if (hasArg(block.sizes)) args_l$block.sizes=input_list$block.sizes
   if (hasArg(pm)) args_l$pm=input_list$pm
-  Ag<-generate_realistic_adjacency(N,opts=opts, verbose=verbose)
+  Ag<-generate_realistic_adjacency(N,opts=opts, args_l=args_l,verbose=verbose)
   A<-as(get.adjacency(Ag),"matrix")
   graph_seq<-matrix(0,T,nrow(A)^2)
   graph_seq[1,]<-as.vector(t(A))
-  dist<-matrix(0, 18,T-1)
+  dist<-matrix(0, 16,T-1)
   for (t in 1:(T-1)){
     if (verbose==TRUE) print(paste("time: ",t))
     if(t<7){
@@ -536,18 +634,16 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
     hamming<-hamming_based_distance(A, A_new)
     dist[1,t]<-1/(N*(N-1))*sum(abs(A-A_new))
     dist[2,t]<-jaccard_based_distance(A,A_new)
-    sp_Anew=get_nb_ST(A_new)
-    sp_A=get_nb_ST(A)
+    sp_Anew=get_number_spanning_trees(A_new)
+    sp_A=get_number_spanning_trees(A)
     #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[3,t]=abs(log(sp_A)-log(sp_Anew))
+    dist[3,t]=abs(log(max(sp_A,1))-log(max(sp_Anew,1)))
     dist[4:6,t]<-netdist(A, A_new,d = "HIM")
     dist[7,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
     dist[8,t]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
     dist[8,t]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
     dist[9,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
-    dist[10,t]=abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-    dist[11,t]<-poly_distance2(A, A_new,order_max=5,alpha=0.5)
-    dist[12,t]<-poly_distance2(A, A_new,order_max=3,alpha=0.9)
+    dist[10,t]=abs(sp_Anew-sp_A)/max(sp_A+sp_Anew,1)
     it_alpha=0
     
     for (alpha in alphas){
@@ -557,34 +653,86 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
       else{
         cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
       }
-      dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
+      dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){return(-alpha*x)},p=2)
       it_alpha=it_alpha+1
       
     }
-    dist[13+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
+    dist[11+it_alpha,t]<-eigen_distance(A, A_new,function(x){ifelse(x<2,x,0)})
     it_alpha=it_alpha+1
     cols=c(cols,"f(l)= l. 1(l<2)")
     A<-A_new
   }
-  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
+  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
   
   max_poly=max(dist[7,])
 
   if (go_plot==TRUE){
-    plot(1:(T-1), 1-dist[2,], type='l',col=2, xlab="time", ylab="distance", ylim=c(0,1),main="distances with a change of regime at t=10")
+    colors4plots<-c(brewer.pal(n=9,name="Set1"),brewer.pal(n=9,name="Pastel1"))
+    #pdf(paste(path2plots,'change_point_realistic_vanilla_dist.#pdf',sep=''),width=8,height=4,paper='special')
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    
+    plot(1:(T-1), (1-dist[2,]), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="Vanilla distances with a change of regime at t=7 and 14")
     for (j in 3:6){
-      points(1:(T-1), dist[j,], type='l',col=j)
+        points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    for (j in 7:12){
-      points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=j)
+    points(1:(T-1), dist[10,], type='l',col=colors4plots[10])
+    legend("topright", inset=c(-0.1,0), legend=c("Jaccard ","Spanning Tree","Hamming","IM","HIM","Spanning Tree norm"),col=colors4plots[c(2:6,10)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    #pdf(paste(path2plots,'change_point_realistic_poly_dist.#pdf',sep=''),width=8,height=4,paper='special')
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    plot(1:(T-1), dist[7,], ylim=c(0,max(dist[7:9,])),type='l',col=colors4plots[7],main="Polynomial distances with a change of regime at t=7 and 14")
+    for (j in 8:9){
+        points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
     }
-    par(xpd=TRUE)
-    legend("topright", inset=c(-0.5,0), legend=c("Jaccard","Spanning Trees","Hamming","IM","HIM",paste("alpha=0.5,order=5 (x", signif(max(dist[7,]),4),")"),paste("alpha=0.5,order=3 (x", signif(max(dist[8,]),4),")"),paste("alpha=0.9,order=3 (x", signif(max(dist[9,]),4),")"),paste("ST norm (x", signif(max(dist[10,]),4),")"),paste("poly 2 alpha=0.5,order=5 (x", signif(max(dist[11,]),4),")"),paste("poly2 alpha=0.9,order=3 (x", signif(max(dist[12,]),4),")")),col=2:12,lty=1,lwd = 2,cex=0.7)
+    legend("topright", inset=c(-0.1,0), legend=c("alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3"),col=colors4plots[c(7:9)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    
+    #pdf(paste(path2plots,'change_point_realistic_spectral_dist.#pdf',sep=''),width=8,height=4,paper='special')
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    it_alpha=0
+    plot(1:(T-1), dist[11,], ylim=c(0,max(dist[11:nrow(dist),])),type='l',col=colors4plots[11],main="Eigen distances with a change of regime at t=7 and 14")
+    for (j in 11: nrow(dist)){
+        it_alpha=it_alpha+1
+        points(1:(T-1), dist[j,], type='l',col=colors4plots[j])
+    }
+    legend("topright", inset=c(-0.1,0), legend=cols,col=colors4plots[11:nrow(dist)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
+    
+    
+    #pdf(paste(path2plots,'change_point_realistic_relative amplitude.#pdf',sep=''),width=8,height=4,paper='special')
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    
+    plot(1:(T-1), (1-dist[2,])/max((1-dist[2,])), type='l',col=colors4plots[2], xlab="time", ylab="distance", ylim=c(0,1),main="distances with a change of regime at t=7 and 14")
+    for (j in 3:6){
+      points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+    }
+    for (j in 7: nrow(dist)){
+      points(1:(T-1), dist[j,]/max(dist[j,]), type='l',col=colors4plots[j])
+    }
+    par( mar = c(3, 4, 3.5, 5),xpd=TRUE)
+    names=c(paste("Jaccard ",round(max(1-dist[2,]),4)),
+    paste("Spanning Trees",round(max(dist[3,]),4)),paste("Hamming",round(max(dist[4,]),4)),
+    paste("IM",round(max(dist[5,]),4)),paste("HIM",round(max(dist[6,]),4)),
+    paste("a=0.5,ord=5 (x", signif(max(dist[7,]),4),")"),
+    paste("a=0.5,ord=3 (x", signif(max(dist[8,]),4),")"),
+    paste("a=0.9,ord=3 (x", signif(max(dist[9,]),4),")"),
+    paste("ST norm (x", signif(max(dist[10,]),4),")"))
+    it_alpha=0
+    for (j in 11: nrow(dist)){
+        it_alpha=it_alpha+1
+        names=c(names,paste(cols[it_alpha]," x", signif(max(dist[j,]),4)))
+    }
+    
+    
+    legend("topright", inset=c(-0.1,0), legend=names,col=colors4plots[2: nrow(dist)],lty=1,lwd = 2,cex=0.7)
+    #dev.off()
   }
-  #dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=3","alpha=0.7,order=5","alpha=0.9,order=3","norm ST","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3"))
+ 
   
   if (save_graph_seq){
-    #dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=3","alpha=0.7,order=5","alpha=0.9,order=3","norm ST","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3"))
+  
     lab=c("pa","island","dot","SBM")
     write.table(dist,sep=" ",file = paste(path_to_graph,"test_change_point_realistic_",N,"_",lab[opts],"_",name_file_ext,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
     write.table(graph_seq,sep=" ",file = paste(path_to_graph,"test_change_point_realistic_",N,"_",lab[opts],"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
@@ -602,7 +750,7 @@ test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(
 ### ------------------------------------------------------------------------------------------------------
 ############################    2-phase dynamic regime  in   evolving ER graph  ##########################
 ### ------------------------------------------------------------------------------------------------------
-test_change_point_detection_ER_two_phases<-function(N, T,time_change_point=floor(T/2),p0=0.3,params_evolution=c(0.3,0,0),params_evolution_new=c(0.6,0,0),prop=0.05,prop_new=0.05, plot=TRUE){
+test_change_point_detection_ER_two_phases<-function(N, T,time_change_point=floor(T/2),p0=0.3,params_evolution=c(0.3,0,0),params_evolution_new=c(0.6,0,0),prop=0.05,prop_new=0.05, plot=TRUE,path2plots='./tests_synthetic_data/plots_experiments/'){
     ##  Description
     ##  -------------
     ##  Compares how different distances detect a dynamical regime change. At time t=time_change_point, the evolution
@@ -627,33 +775,34 @@ test_change_point_detection_ER_two_phases<-function(N, T,time_change_point=floor
     ## distance             :    matrix of pairwise distances between consecutive graphs
     
     A<-generate_random_adjacency(N,p0,sym=TRUE, plot=FALSE)
-    distances<-matrix(0,4,(T-1))
+    distances<-matrix(0,9,(T-1))
     for ( t in 1:time_change_point){
         A_new<-random_alteration_adjacency(A,prop,params_evolution[1],params_evolution[2],params_evolution[3])
-        distances[1,t]<-abs(get_number_spanning_trees2(A_new)-get_number_spanning_trees2(A))/(get_number_spanning_trees2(A_new)+get_number_spanning_trees2(A))
-        distances[5:7,t]<-netdist(A, A_new,d = "HIM")
+        distances[2,t]<-abs(get_number_spanning_trees(A_new)-get_number_spanning_trees(A))/max(get_number_spanning_trees(A_new)+get_number_spanning_trees(A),1)
+        distances[1,t]<-abs(log(get_number_spanning_trees(A_new))-log(get_number_spanning_trees(A)))
+        
+        distances[3:5,t]<-netdist(A, A_new,d = "HIM")
+        dist[6,t]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
+        dist[7,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
+        dist[8,t]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
+        dist[9,t]<-poly_distance(A, A_new,order_max=5,alpha=0.3)
         #print(distances[,t])
-        A<-A_new
-    }
-    for ( t in (time_change_point+1):(T-1)){
-        A_new<-random_alteration_adjacency(A,prop_new,params_evolution_new[1],params_evolution_new[2],params_evolution_new[3])
-        distances[1,t]<-get_number_spanning_trees2(A, A_new)
-        distances[5:7,t]<-netdist(A, A_new,d = "HIM")
         A<-A_new
     }
     
     if (plot==TRUE){
+     
         pic_name=paste("plot_distance_evolution.jpg")
         jpeg(pic_name)
-        plot(1:(T-1),distances[5,],ylim=c(0,1), type="l",col=5,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
+        plot(1:(T-1),distances[5,],ylim=c(0,1), type="l",col=5,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs, one change point")
         points(1:(T-1),distances[6,], type="l",col=6,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
-        points(1:(T-1),distances[7,], type="l",col=7,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
+        points(1:(T-1),distances[7,], type="l",col=colors4plots[7],xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
         points(1:(T-1),distances[1,], type="l",col=1,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
-        points(1:(T-1),distances[2,], type="l",col=2,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
+        points(1:(T-1),distances[2,], type="l",col=colors4plots[2],xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
         points(1:(T-1),distances[3,], type="l",col=3,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
         points(1:(T-1),distances[4,], type="l",col=4,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs")
-        legend(1,1,c( "Ratio difference in ST","Spanning tree of change matrix", "Ratio ST change matrix/ ST original graph", "Sparsity",  "H","IM","HIM"),col=1:7,lwd=2,cex=0.4)
-        dev.off()
+        legend(1,1,c( "Spanning Tree","ST norm","H","IM","HIM","poly 3, alpha=0.5","poly 3, alpha=0.9","poly 5, alpha=0.5","poly 5, alpha=0.3"),col=1:9,lwd=2,cex=0.4)
+        #dev.off()
     }
     return(distances)
     
@@ -664,7 +813,7 @@ test_change_point_detection_ER_two_phases<-function(N, T,time_change_point=floor
 ###############      ER graph: evolution with three phases        ########################################
 ### ------------------------------------------------------------------------------------------------------
 
-test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_disp=c(0,0,0),p_creation=c(0,0,0),T=21,verbose=TRUE,save_graph_seq=T,name_file_ext=""){
+test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_disp=c(0,0,0),p_creation=c(0,0,0),T=21,verbose=TRUE,save_graph_seq=T,path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",alphas=c(0.1)){
     ##  Description
     ##  -------------
     ##  Function for generating an ER random graph, and computing distance between consecutive graphs
@@ -722,16 +871,15 @@ test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_dis
     plot(graph_from_adjacency_matrix(A[[1]],mode = "undirected"), main="initial graph")
     graph_seq<-matrix(0,T,N^2)
     graph_seq[1,]<-as.vector(t(A[[1]]))
-    dist_changepnt<-matrix(0, 16,T-1)
+    dist_changepnt<-matrix(0, 8+length(alphas)+1,T-1)
     prop=0.05
-    T=21
     for (t in 1:(T-1)){
         if (verbose==TRUE) print(paste("time: ",t))
-        if(t<10){
+        if(t<T%/%3){
             A_new[[t]]<-random_alteration_adjacency(A[[1]],prop[1],p[2], p_disp[1], p_creation[1])
         }
         else{
-            if(t<16){
+            if(t<2*T%/%3){
                 A_new[[t]]<-random_alteration_adjacency(A[[t]],prop[1],p[3], p_disp[2], p_creation[2])
             }
             else{
@@ -739,17 +887,15 @@ test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_dis
             }
         }
         
-        graph_seq[t+1,]<-as.vector(t(A[[t+1]]))
-        stree_new=get_nb_ST(A_new[[t]])
-        stree=get_nb_ST(A[[t]])
-        dist_changepnt[1,t]<-1/N*abs(log(stree_new)-log(stree))
+        graph_seq[t+1,]<-as.vector(t(A_new[[t]]))
+        stree_new=get_number_spanning_trees(A_new[[t]])
+        stree=get_number_spanning_trees(A[[t]])
+        dist_changepnt[1,t]<-abs(log(stree_new)-log(stree))
         dist_changepnt[2:4,t]<-netdist(A[[t]], A_new[[t]],d = "HIM")
         dist_changepnt[5,t]<-poly_distance(A[[t]], A_new[[t]],order_max=3,alpha=0.5)
         dist_changepnt[6,t]<-poly_distance(A[[t]], A_new[[t]],order_max=5,alpha=0.7)
         dist_changepnt[7,t]<-poly_distance(A[[t]], A_new[[t]],order_max=3,alpha=0.9)
-        dist_changepnt[8,t]=abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
-        dist_changepnt[9,t]<-poly_distance2(A[[t]], A_new[[t]],order_max=5,alpha=0.5)
-        dist_changepnt[10,t]<-poly_distance2(A[[t]], A_new[[t]],order_max=3,alpha=0.9)
+        dist_changepnt[8,t]=abs(stree_new-stree)/max(stree+stree_new,1)
         it_alpha=0
         
         for (alpha in alphas){
@@ -768,17 +914,18 @@ test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_dis
         cols=c(cols,"f(l)= l. 1(l<2)")
         A[[t+1]]<-A_new[[t]]
     }
-    dist_changepnt=data.frame(dist_changepnt,row.names = c("ST","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm","poly2 alpha=0.5,order=5","poly2 alpha=0.9,order=3",cols))
+    dist_changepnt=data.frame(dist_changepnt,row.names = c("ST","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
     
     
     
     
-    plot(1:(T-1),dist_changepnt[2,],ylim=c(0,1), type="l",col=2,xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs (with change point)")
-    points(1:(T-1),dist_changepnt[1,], type="l",col=1,xlab="time", ylab="distance between consecutive graphs")
-    points(1:(T-1),dist_changepnt[3,], type="l",col=3,xlab="time", ylab="distance between consecutive graphs")
-    points(1:(T-1),dist_changepnt[4,], type="l",col=4,xlab="time", ylab="distance between consecutive graphs")
+    plot(1:(T-1),dist_changepnt[1,]/max(dist_changepnt[1,]),ylim=c(0,1), type="l",col=colors4plots[2],xlab="time", ylab="distance between consecutive graphs", main="Evolution of the distance between consecutive graphs (with change point)")
+    points(1:(T-1),dist_changepnt[2,]/max(dist_changepnt[2,]), type="l",col=1,xlab="time", ylab="distance between consecutive graphs")
+    points(1:(T-1),dist_changepnt[3,]/max(dist_changepnt[3,]), type="l",col=3,xlab="time", ylab="distance between consecutive graphs")
+    points(1:(T-1),dist_changepnt[4,]/max(dist_changepnt[4,]), type="l",col=4,xlab="time", ylab="distance between consecutive graphs")
     points(1:(T-1),dist_changepnt[5,]/max(dist_changepnt[5,]), type="l",col=5,xlab="time", ylab="distance between consecutive graphs")
-    legend(1,1,c( "ST-based dist",  "H","IM","HIM",paste("Poly x",max(dist_changepnt[5,]))),col=1:5,lwd=2,cex=0.7)
+    legend(1,1,c( paste("ST x",round(max(dist_changepnt[1,]),5)), paste("Hamming x",round(max(dist_changepnt[2,]),5)),paste("IM x",round(max(dist_changepnt[3,]),5)),
+                  paste("HIM x",round(max(dist_changepnt[4,]),5)),paste("Poly x",round(max(dist_changepnt[5,]),5))),col=1:5,lwd=2,cex=0.7)
     
     if (save_graph_seq){
         #dist=data.frame(dist_changepnt,row.names = c("ST-based dist",  "H","IM","HIM","alpha=0.5,order=5"))
