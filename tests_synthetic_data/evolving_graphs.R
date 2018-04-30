@@ -248,7 +248,7 @@ test_smooth_Realistic_changes<-function(N,m,m_disp=0,m_creation=0, p_modified, p
   args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
   input_list <- as.list(substitute(list(...)))
-  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(p) ){ args_l$p_ER=input_list$p_ER}
   if (hasArg(pow) ){args_l$power<-input_list$pow}
   if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
   if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
@@ -545,8 +545,8 @@ test_change_point<-function(N=30,p0=0.4,p=0.4,prop=0.05,prop2=0.2,p2=0.4, T=21,v
 
 test_change_point_realistic<-function(N=30,m=c(10,15),p_mod=c(0.1,0.1),p_disp=c(0.0,0.0),
 p_creation=c(0.0,0.0),opts=1, T=21,verbose=TRUE,m_disp=0,m_creation=5,go_plot=TRUE,
-initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,path_to_graph='./plots/',
-path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
+initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,path_to_graph='./graphs_test/',
+path2plots='./graphs_test/',name_file_ext="",...){
   if (initial_message==TRUE){
       
       
@@ -597,12 +597,12 @@ path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
   }
   alphas=c(0.1,0.4,0.9,1.2,3)
   ##### 1> Generate initial random matrix
-  args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+  args_l<-list(p_ER=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   ### Change argument list according to what is given as argument to the function
   input_list <- as.list(substitute(list(...)))
   #print(do.call("pow",$pow))
   ### Change argument list according to what is given as argument to the function
-  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(p) ){ args_l$p=input_list$p_ER}
   if (hasArg(pow) ){args_l$power<-input_list$pow}
   if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
   if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
@@ -615,7 +615,7 @@ path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
   A<-as(get.adjacency(Ag),"matrix")
   graph_seq<-matrix(0,T,nrow(A)^2)
   graph_seq[1,]<-as.vector(t(A))
-  dist<-matrix(0, 16,T-1)
+  dist<-matrix(0, 10+1+2*length(alphas),T-1)
   for (t in 1:(T-1)){
     if (verbose==TRUE) print(paste("time: ",t))
     if(t<7){
@@ -645,6 +645,30 @@ path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
     dist[9,t]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
     dist[10,t]=abs(sp_Anew-sp_A)/max(sp_A+sp_Anew,1)
     it_alpha=0
+    it_alpha=0
+    
+    for (alpha in alphas){
+      if (it_alpha==0){
+        cols=paste("f(l)=exp(-",alpha,"l)",sep="")
+      }
+      else{
+        cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
+      }
+      dist[11+it_alpha,ttt]<-eigen_distance(A[[t]], A[[tt]],function(x){return(exp(-alpha*x))},p=2)
+      it_alpha=it_alpha+1
+      
+    }
+    for (alpha in alphas){
+      cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
+      
+      dist[11+it_alpha,ttt]<-heat_distance(A[[t]], A[[tt]],alpha,p=2)
+      it_alpha=it_alpha+1
+      
+    }
+    dist[11+it_alpha,ttt]<-eigen_distance(A[[t]], A[[tt]],function(x){ifelse(x<2,x,0)})
+    it_alpha=it_alpha+1
+    cols=c(cols,"f(l)= l. 1(l<2)")
+    
     
     for (alpha in alphas){
       if (it_alpha==0){
@@ -662,7 +686,7 @@ path2plots='./tests_synthetic_data/plots_experiments/',name_file_ext="",...){
     cols=c(cols,"f(l)= l. 1(l<2)")
     A<-A_new
   }
-  dist=data.frame(dist,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
+  dist=data.frame(dist)#,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
   
   max_poly=max(dist[7,])
 
@@ -940,6 +964,292 @@ test_change_point_detection_ER_three_phases<-function(N,p,prop=c(0.05,0.2),p_dis
 
 
 
+### ------------------------------------------------------------------------------------------------------
+#######################      random ``realistic'' graph comparison with change point #####################
+### ------------------------------------------------------------------------------------------------------
+test_K_progressive_evolution_realistic<-function(N=30,K=10, opts=1,args,T=21,prop=0.1,p=0.9, p_disp=0.1, p_creation=p_disp*prop,verbose=FALSE,save_graph_seq=T,alphas=c(0.2,0.9,1.4,3),name_file_ext="",degree_adjusted=FALSE){
+  
+  ##  Description
+  ##  -------------
+  ##  Function for generating  K random graphs, modifying them little by little, and computing distance between consecutive graphs
+  ##  (using different metrics: spanning trees, Hamming, IM, etc).
+  ##  
+  
+  ##  INPUT:
+  ##  =============================================================
+  ##  N               :   Number of nodes in the graphs (int)
+  ##  opts            :   what type of random graph (1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
+  ##  args            :   arguments for the graph in the first dynamic period (named list
+  ##                      as per igraph documentation)
+  ##  T               :   number of different graphs that are generated. (int>1)
+  ##  verbose         :   boolean. Should intermediary summary messages be printed? (useful for
+  ##                      debugging. Default=TRUE
+  ##  save_graph_seq  :   boolean.Should the graphs be saved? Default=TRUE
+  ##  name_file_ext   :   string (name of the file were the graphs should be saved if save_graph_seq
+  ##                      is TRUE. Default=""
+  ##
+  ##  OUTPUT
+  ##  =============================================================
+  ##  list            :   list with named arguments dist_random (distance between consecutive  graphs)
+  ##                      and data (a matrix where each column corresponds to a flattened graph)
+  
+  
+  print("further tests: comparison of completely random graphs, with generating regime change")
+  #### Compare against totally random networks
+  A<-vector("list",T*K)
+  A_new<-vector("list",(T-1)*K)
+  graph_seq<-matrix(0,T*K,N^2)
+  dist<-matrix(0, 11+2*length(alphas)+1,((T)*K)^2)
+  
+  
+  
+  for (k in 1:K){
+    Ag<-generate_realistic_adjacency(N,args_l=args,opts=opts, verbose)
+    #plot(Ag, main="initial graph")
+    A[[k]]<-as(get.adjacency(Ag),"matrix")
+    graph_seq[k,]<-as.vector(t(A[[k]]))
+  }
+  
+  
+  for (tt in 1:(T-1)){
+    if (verbose==TRUE) print(paste("time: ",tt))
+    for (k in 1:K){
+      t=(tt-1)*K+k
+      #Ag_new<-graph_alteration(Ag,m,p_disp,p_creation,loc=loc)
+      Ag_new<-random_alteration_adjacency(A[[t]],prop,p=p, p_disp=p_disp, p_creation=p_creation,degree_adjusted=degree_adjusted)
+      A_new[[t]]<-Ag_new
+      A[[t+K]]<-A_new[[t]]
+      graph_seq[t+K,]<-as.vector(t(A[[t+K]]))
+    }
+  }
+  for (t in 2:(T*K)){ 
+    print(paste("iteration t=",t))
+    for (tt in 1:(t-1)){
+      
+      ttt=(t-2)*(T*K)+tt
+      stree_new=abs(get_number_spanning_trees(A[[tt]]))
+      stree=abs(get_number_spanning_trees(A[[t]]))
+      dist[1,ttt]<-hamming_based_distance(A[[t]], A[[tt]])
+      dist[2,ttt]<-jaccard_based_distance(A[[t]], A[[tt]])
+      dist[3,ttt]<-1/N*abs(stree_new-abs(stree))
+      dist[4:6,ttt]<-netdist(A[[t]], A[[tt]],d = "HIM")
+      dist[7,ttt]<-poly_distance(A[[t]], A[[tt]],order_max=3,alpha=0.5)
+      dist[8,ttt]<-poly_distance(A[[t]], A[[tt]],order_max=5,alpha=0.7)
+      dist[9,ttt]<-poly_distance(A[[t]], A[[tt]],order_max=3,alpha=0.9)
+      dist[10,ttt]=abs(stree_new-stree)/abs(stree_new+stree)
+      it_alpha=0
+      
+      for (alpha in alphas){
+        if (it_alpha==0){
+          cols=paste("f(l)=exp(-",alpha,"l)",sep="")
+        }
+        else{
+          cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
+        }
+        dist[11+it_alpha,ttt]<-eigen_distance(A[[t]], A[[tt]],function(x){return(exp(-alpha*x))},p=2)
+        it_alpha=it_alpha+1
+        
+      }
+      
+      
+      for (alpha in alphas){
+        cols=c(cols,paste("heat ", alpha,sep=""))
+        dist[11+it_alpha,ttt]<-heat_distance(A[[t]], A[[tt]],alpha,p=2)
+        it_alpha=it_alpha+1
+        
+      }
+      
+      dist[11+it_alpha,ttt]<-eigen_distance(A[[t]], A[[tt]],function(x){ifelse(x<2,x,0)})
+      it_alpha=it_alpha+1
+      cols=c(cols,"f(l)= l. 1(l<2)")
+      
+     
+      
+      
+    }
+    
+  }
+  dist=data.frame(dist)
+  
+  if (save_graph_seq){
+    write.table(dist,sep=" ",file = paste("graphs_test_final/",N,"_",prop,"_",name_file_ext,"distances.txt",sep=""),row.names = TRUE,col.names = FALSE)
+    write.table(graph_seq,sep=" ",file = paste("graphs_test_final/",N,"_",prop,"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
+  }
+  return(list(dist=dist,data=graph_seq))
+}
+### ------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+### -------------------------------------------------------------------------------------------------------
+### second function for more ``realistic'' random structures :
+
+test_change_point_complete_similarity<-function(N=30,prop=c(0.1,0.3),p=c(0.85,0.85),p_disp=c(0.1,0.1),
+                                      opts=1, T=21,verbose=TRUE,
+                                      initial_message=TRUE,very_verbose=FALSE,save_graph_seq=FALSE,path_to_graph='./graphs_test/',
+                                      path2plots='./graphs_test_final_temp/',name_file_ext="",degree_adjusted=TRUE,alphas=c(0.1,0.4,0.9,1.2,3),...){
+  if (initial_message==TRUE){
+    
+    
+    
+    ##  Description
+    ##  -------------
+    ##  Function generating a more "realistic" random graph (PA, Island, SBM,WS), and letting it evolve through time.
+    ##  The evolution mechanism is the following: we chose m edges: these selected edges are
+    ##  potentially modifiable edges. Each candidate edge is then rewired with probability p, or disappears with probability p_disp, and stays in place
+    ##  with probability 1-p_disp-p. Here, we add a change point in the evolution mechanism. At time t=10, the number of modifiable edges changes to m2,
+    ##  the rewiring probabiity changes from p to p2, and the disappearance probability changes from p_disp to p_disp2.
+    ##  Different distances between consecutive graphs are computed.
+    ##
+    ##  INPUT:
+    ##  =============================================================
+    ##  N               :   Number of nodes in the graphs (int)
+    ##  m               :   2-d vector for the number of edges that  potentially are rewired (int)
+    ##  m_disp          :   2-d vector for the number of edges that  potentially are deleted in firs/second  dynamic regime (int)
+    ##  m_creation      :   2-d vector for the number of edges that  are created  in first/second  dynamic regime (int)
+    ##  p_mod           :   2-d vector  for the probability that one of the edges chosen as "potentially rewired" is rewired in the first dynamic regime
+    ##                      (float/double<1)
+    ##  p_disp          :   2-d vector  for the probability that one of the edges chosen as "potentially deleted" disappears in the first dynamic regime
+    ##                      (float/double<1)
+    ##  p_creation      :   2-d vector  for the probability that an edge is created (float/double<1)
+    ##  T               :   length of the horizon (evolution period) (int>1)
+    ##  opts            :   what type of random graph (0: ER, 1: PA, 2: Island, 3: Dot Product, 4: SBM). Default=1
+    ##  verbose,very_verbose:   bolean. should the method be verbose?
+    ##  m_disp          :   number of edges that disappear (with prob 1) in the first time regime (int. Default: 0)
+    ##  m_disp2         :   number of edges that disappear (with prob 1) in the second time regime (int. Default: 0)
+    ##  go_plot         :   should the algorithm print the dstance curves (bolean, Default: TRUE)
+    ##  initial_message :   should a summary first message be printed? (bolean, Default: TRUE)
+    ##  save_graph_seq  :   should the whole graph sequence be saved in a matrix? (bolean, Default: TRUE)
+    ##  name_file_ext   :   string for the name of the graph seq. Default=""
+    ##  path_to_graph   :   string indicating where the graph seq should be saved. Default='./tests_synthetic_data/generated_graphs/'
+    ##  name_graph      :   name of the graph sequence. Default=''
+    ##  path2plots       :   string indicating where the plots should be saved.  Default='./plots/'
+    ##  ...             :   additional named parameters for the initial graph generation (as per igraph nomenclature)
+    ##
+    ##  OUTPUT
+    ##  =============================================================
+    ##  results         : named list with arguments distances (vector of T distances between consecutive graphs) and graph_seq: an array of all the flattened       adjacency matrices of the graphs)
+    
+    
+    print("Investigating the ability of the distance to detect dynamic regime changes")
+    
+    print(paste("A graph with N=", N, "nodes is considered as per creation model ",opts))
+    print(paste("At time t=10, the proportion of randomly reassigned edges changes from", prop[1], " to ",prop[2], "with new change proba= ", p[2], " vs ", p[1], "and deletion",p_disp[2] ))
+  }
+  
+  ##### 1> Generate initial random matrix
+  args_l<-list(p_ER=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+  ### Change argument list according to what is given as argument to the function
+  input_list <- as.list(substitute(list(...)))
+  #print(do.call("pow",$pow))
+  ### Change argument list according to what is given as argument to the function
+  if (hasArg(p_ER) ){ args_l$p_ER=input_list$p_ER}
+  if (hasArg(pow) ){args_l$power<-input_list$pow}
+  if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
+  if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
+  if (hasArg(islands.pin)) args_l$islands.pin=input_list$islands.pin
+  if (hasArg(n.inter)) args_l$n.inter=input_list$n.inter
+  if (hasArg(K)) args_l$K=input_list$K
+  if (hasArg(block.sizes)) args_l$block.sizes=input_list$block.sizes
+  if (hasArg(pm)) args_l$pm=input_list$pm
+  print(args_l)
+  Ag<-generate_realistic_adjacency(N,opts=opts, args_l=args_l,verbose=verbose)
+  A<-as(get.adjacency(Ag),"matrix")
+  graph_seq<-matrix(0,T,nrow(A)^2)
+  graph_seq[1,]<-as.vector(t(A))
+  dist<-matrix(0, 10+1+2*length(alphas),T-1)
+  G<-vector("list",T)
+  A_new<-vector("list",(T-1))
+  K=1
+  graph_seq<-matrix(0,T,N^2)
+  dist<-matrix(0, 11+2*length(alphas)+1,T^2)
+  
+  
+  k=1
+  Ag<-generate_realistic_adjacency(N,args_l=args_l,opts=opts, verbose)
+    #plot(Ag, main="initial graph")
+  G[[1]]<-as(get.adjacency(Ag),"matrix")
+  graph_seq[k,]<-as.vector(t(G[[1]]))
+  
+  
+  
+  for (t in 1:(T-1)){
+    if (verbose==TRUE) print(paste("time: ",t))
+    if(t<7){
+      Ag_new<-random_alteration_adjacency(G[[t]],prop=prop[1],p=p[1], p_disp=p_disp[1], p_creation=p_disp[1]*prop[1],degree_adjusted=degree_adjusted)
+    }
+    else{
+      if (t<14) Ag_new<-random_alteration_adjacency(G[[t]],prop=prop[2],p=p[2], p_disp=p_disp[2], p_creation=p_disp[2]*prop[2],degree_adjusted=degree_adjusted)
+      else{
+        Ag_new<-random_alteration_adjacency(G[[t]],prop=prop[1],p=p[1], p_disp=p_disp[1], p_creation=p_disp[1]*prop[1],degree_adjusted=degree_adjusted)
+        print("changed back")
+      }
+    }
+    A_new[[t]]<-Ag_new
+    G[[t+1]]<-A_new[[t]]
+    graph_seq[t+K,]<-as.vector(t(G[[t+K]]))
+  
+  }
+  
+  
+  for (t in 2:(T)){ 
+    print(paste("iteration t=",t))
+    for (tt in 1:(t-1)){
+      ttt=(t-2)*T+tt
+      A=G[[t]]
+      A_new=G[[tt]]
+      hamming<-hamming_based_distance(A, A_new)
+      dist[1,ttt]<-1/(N*(N-1))*sum(abs(A-A_new))
+      dist[2,ttt]<-jaccard_based_distance(A,A_new)
+      sp_Anew=get_number_spanning_trees(A_new)
+      sp_A=get_number_spanning_trees(A)
+      #dist[3,t]<-abs(sp_Anew-sp_A)/(sp_A+sp_Anew)
+      dist[3,ttt]=abs(log(max(sp_A,1))-log(max(sp_Anew,1)))
+      dist[4:6,ttt]<-netdist(A, A_new,d = "HIM")
+      dist[7,ttt]<-poly_distance(A, A_new,order_max=3,alpha=0.5)
+      dist[8,ttt]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
+      dist[8,ttt]<-poly_distance(A, A_new,order_max=5,alpha=0.7)
+      dist[9,ttt]<-poly_distance(A, A_new,order_max=3,alpha=0.9)
+      dist[10,ttt]=abs(sp_Anew-sp_A)/max(sp_A+sp_Anew,1)
+      it_alpha=0
+      
+      for (alpha in alphas){
+        if (it_alpha==0){
+          cols=paste("f(l)=exp(-",alpha,"l)",sep="")
+        }
+        else{
+          cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
+        }
+        dist[11+it_alpha,ttt]<-eigen_distance(G[[t]], G[[tt]],function(x){return(exp(-alpha*x))},p=2)
+        it_alpha=it_alpha+1
+        
+      }
+      for (alpha in alphas){
+        cols=c(cols,paste("f(l)=exp(-",alpha,"l)",sep=""))
+        
+        dist[11+it_alpha,ttt]<-heat_distance(G[[t]], G[[tt]],alpha,p=2)
+        it_alpha=it_alpha+1
+        
+      }
+      dist[11+it_alpha,ttt]<-eigen_distance(G[[t]], G[[tt]],function(x){ifelse(x<2,x,0)})
+      it_alpha=it_alpha+1
+      cols=c(cols,"f(l)= l. 1(l<2)")
+    
+    }
+  }
+  dist=data.frame(dist)#,row.names = c("Hamming1","Jaccard","Spanning Trees","Hamming","IM","HIM","alpha=0.5,order=5","alpha=0.5,order=3","alpha=0.9,order=3","ST norm",cols))
+  
+
+  if (save_graph_seq){
+    lab=c("pa","island","dot","SBM")
+    write.table(dist,sep=" ",file = paste(path_to_graph,"temp_",N,"_",lab[opts],"_",name_file_ext,"distances.txt",sep=""),row.names = FALSE,col.names = FALSE)
+    write.table(graph_seq,sep=" ",file = paste(path_to_graph,"temp_",N,"_",lab[opts],"_",name_file_ext,".txt",sep=""),row.names = FALSE,col.names = FALSE)
+  }
+  return(list(dist=dist, data=graph_seq))
+}
 
 
 

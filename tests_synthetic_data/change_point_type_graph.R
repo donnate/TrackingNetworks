@@ -265,9 +265,3 @@ random_comp_tests_realistic<-function(N=30,opts=1,args, args2,T=21,verbose=FALSE
 
 
 
-
-
-
-
-
-

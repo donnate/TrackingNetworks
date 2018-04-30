@@ -95,13 +95,13 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
     ##  =============================================================
     ##  A               :   adjacency matrix of an ER graph
   if (length(args_l)==0){
-        args_l<-list(p=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
+        args_l<-list(p_ER=0.1,power=0.9,islands.n=3,islands.size=9,islands.pin=0.3,n.inter=3,K=6,block.sizes=c(10,10,10),pm=cbind( c(.4,0.1, .001), c(.1,0.2, .01),c(.001,0.01, .5)))
   }
   input_list <- as.list(substitute(list(...)))
   #print(input_list)
   #print(do.call("pow",$pow))
   ### Change argument list according to what is given as argument to the function
-  if (hasArg(p) ){ args_l$p=input_list$p}
+  if (hasArg(p_ER) ){ args_l$p_ER=input_list$p_ER}
   if (hasArg(pow) ){args_l$power<-input_list$pow}
   if (hasArg(islands.n)) args_l$islands.n=input_list$islands.n
   if (hasArg(islands.size) )args_l$islands.size=input_list$islands.size
@@ -111,9 +111,10 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
   if (hasArg(block.sizes)) args_l$block.sizes=eval(input_list$block.sizes)
   if (hasArg(pm)) args_l$pm<-eval(input_list$pm)
   name_type_graph=c('ER', 'Power Law','Island', 'Dot Product','SBM')
+  print(opts)
   if(verbose){print(paste("Type of graph generated: ",name_type_graph[opts+1]))}
   if (opts==0){
-      g=erdos.renyi.game(N, args_l$p, type = "gnp", directed = FALSE,loops = FALSE)
+      g=erdos.renyi.game(N, args_l$p_ER, type = "gnp", directed = FALSE,loops = FALSE)
   }
   else{
       if (opts==1){
@@ -136,7 +137,9 @@ generate_realistic_adjacency<-function(N,opts=1,args_l=list(),verbose=TRUE,...){
 
             if (verbose) print(N)
             block.sizes=c(floor(N/3),floor(N/3),N-2*floor(N/3))
+            print(pm)
             g <- sample_sbm(N, pref.matrix=pm, block.sizes=block.sizes)
+            
             if (verbose==TRUE) print(paste("stochastic block model: block size", args_l$block.sizes))
           }
           else{
@@ -210,7 +213,7 @@ sample_new_dest<-function(node,N){
 ### ------------------------------------------------------------------------------------------------------
 ###############################      basic graph alteration function        ##############################
 ### ------------------------------------------------------------------------------------------------------
-random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=FALSE){
+random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=FALSE,degree_adjusted=FALSE){
     ##  Description
     ##  -------------
     ## A is the adjacency matrix that we wish to transform
@@ -235,15 +238,16 @@ random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=F
   N=nrow(A)
   A_temp=A
   A_temp[upper.tri(A)]=0
+  proba_connect=apply(A,1,sum)
   edges<-which(A_temp!=0, arr.ind=TRUE)
   non_edges<-which(A_temp==0, arr.ind=TRUE)
-  
+
   #####---------------------------------
   ##### Edge creation
   #####---------------------------------
   if (nb_edges_to_be_created>0){
       index_edges_created=sample(nrow(non_edges),nb_edges_to_be_created,replace= FALSE)
-      for ( i in 1:length(index_edges_modified)){
+      for ( i in 1:length(index_edges_created)){
           e=index_edges_created[i]
           src=non_edges[e,1]
           dest=non_edges[e,2]
@@ -263,10 +267,17 @@ random_alteration_adjacency<-function(A,prop,p, p_disp=0, p_creation=0,verbose=F
     flip=rmultinom(1,1,prob)
     if (which(flip>0)>1){
         if (which(flip>0)==2){
-            new_dest=sample(N-sum(A[src,])-1,1)
             sel=c(src,which(A[src,]==1) )
             sel_c=setdiff(1:N,sel)
-            new_dest=sel_c[new_dest]
+            if (degree_adjusted){
+              proba_connect_here=proba_connect[sel_c]
+              proba_connect_here=proba_connect_here/sum(proba_connect_here)
+              new_dest=sample(sel_c,1,prob=proba_connect_here)
+            }
+            else{
+              new_dest=sample(sel_c,1)
+            }
+            
             A[src,new_dest]=1
             A[new_dest,src]=1
         }

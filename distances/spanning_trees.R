@@ -15,15 +15,19 @@ get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
   ### Note that this works only if the graph is completely connected. Otherwise, it seems even a little meaningless.
   #A<-as.matrix(A)
   N=nrow(A)
+  if (length(A)>1){
+    D<-apply(A,1,sum)  ### degree (diagonal should be the degree of each node)
+  }
+  else{
+    return(1)
+  }
 
-  D<-apply(A,1,sum)  ### degree (diagonal should be the degree of each node)
-  
   if (sum(D==0)>0 & verbose ) print(paste("isolated node(s): ",which(D==0)))
   
   #### This block takes care of isolated nodes
   if (sum(which(D==0))>0 && N>2 && adjust_disconnection==TRUE){  ## adjust the disconnection
     index=which(D==0)
-    index_connected<-setdiff(1:N,index)
+    index_connected<-setdiff(1:ncol(A),index)
     A<-A[index_connected,index_connected]
     return(get_number_spanning_trees(A,adjust_disconnection=TRUE))
   }
@@ -35,23 +39,27 @@ get_number_spanning_trees<-function(A,adjust_disconnection=TRUE,verbose=FALSE){
     else{
 
         D<-apply(A,1,sum)
+        #index=which(D==0)
+        #index_connected<-setdiff(1:ncol(A),index)
+        #A<-A[index_connected,index_connected]
+        #D<-apply(abs(A),1,sum)
         D=diag(D)
         lambda=eigen(D-A,only.values = T) ## eigenvalues of the Laplacian
         ## check the number of disconnect blocks
-        nb_blocks=sum(lambda$values<10^(-12)) ###numerical error
+        nb_blocks=sum(Re(lambda$values)<10^(-10)) ###numerical error
         if (nb_blocks==1){
             ### Only one connected component. Straightforward.
-            ll=lambda$values[which(lambda$values>10^(-12))]
+            ll=Re(lambda$values[which(Re(lambda$values)>10^(-12))])
             nb=-log(N)+sum(log(ll))
         }
         else{
             ### Several connected Components. Add up the number of ST in each component.
-            graph=graph_from_adjacency_matrix(A, mode = "undirected")
+            graph=graph_from_adjacency_matrix(A, mode = "undirected",weighted=TRUE)
             index_cliques=igraph::components(graph)
             nb=0
             for (l in 1:index_cliques$no){
                 selection=which(index_cliques$membership==l)
-                nb<-nb+get_number_spanning_trees(A[selection,selection],adjust_disconnection=TRUE)
+                nb<-nb+get_number_spanning_trees(A[selection,selection],adjust_disconnection=FALSE)
             }
         }
         
